@@ -22,15 +22,8 @@ namespace Auxiliary.Elves.Client
             return Container.Resolve<MainView>();
         }
 
-        // 初始化Shell（主窗口）的时候执行这个方法
-        protected override void InitializeShell(Window shell)
-        {
-
-        }
-
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            throw new NotImplementedException();
         }
     }
 

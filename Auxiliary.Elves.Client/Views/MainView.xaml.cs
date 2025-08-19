@@ -17,7 +17,7 @@ namespace Auxiliary.Elves.Client.Views
     /// <summary>
     /// MainView.xaml 的交互逻辑
     /// </summary>
-    public partial class MainView : Window
+    public partial class MainView
     {
         public MainView()
         {

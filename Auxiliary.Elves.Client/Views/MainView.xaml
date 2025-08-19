@@ -1,4 +1,4 @@
-﻿<Window
+﻿<hc:Window
     x:Class="Auxiliary.Elves.Client.Views.MainView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,186 +7,151 @@
     xmlns:local="clr-namespace:Auxiliary.Elves.Client.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    Title="MainView"
-    Width="1280"
-    Height="860"
+    xmlns:vc ="clr-namespace:Auxiliary.Elves.Client.Converters"
+    Title="辅助精灵"
+    Width="600"
+    Height="600"
     prism:ViewModelLocator.AutoWireViewModel="True"
-    Background="Transparent"
     FontFamily="Microsoft YaHei"
     FontWeight="ExtraLight"
     Foreground="#333"
     WindowStartupLocation="CenterScreen"
+    SnapsToDevicePixels="True" 
+    UseLayoutRounding="True"
     mc:Ignorable="d">
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../Assets/Styles/ToggleButtonStyles.xaml" />
-                <ResourceDictionary>
-                    <Storyboard x:Key="DrawerStroyboard">
-                        <DoubleAnimation
-                            Storyboard.TargetName="brdrDrawer"
-                            Storyboard.TargetProperty="Width"
-                            To="0"
-                            Duration="0:0:0.2" />
-                    </Storyboard>
-                    <Storyboard x:Key="CloseDrawerStroyboard">
-                        <DoubleAnimation
-                            Storyboard.TargetName="brdrDrawer"
-                            Storyboard.TargetProperty="Width"
-                            Duration="0:0:0.2" />
-                    </Storyboard>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-    <WindowChrome.WindowChrome>
-        <WindowChrome
-            GlassFrameThickness="-1"
-            NonClientFrameEdges="None"
-            ResizeBorderThickness="0" />
-    </WindowChrome.WindowChrome>
-    <Window.Triggers>
-        <EventTrigger RoutedEvent="ToggleButton.Checked" SourceName="tgbtnDrawer">
-            <BeginStoryboard Storyboard="{StaticResource DrawerStroyboard}" />
-        </EventTrigger>
-        <EventTrigger RoutedEvent="ToggleButton.Unchecked" SourceName="tgbtnDrawer">
-            <BeginStoryboard Storyboard="{StaticResource CloseDrawerStroyboard}" />
-        </EventTrigger>
-    </Window.Triggers>
-    <Grid Margin="1" Background="Transparent">
-        <DockPanel>
-            <Border
-                x:Name="brdrDrawer"
-                Width="230"
-                Background="#EEE"
-                DockPanel.Dock="Left">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto" />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
-                    <StackPanel>
-                        <TextBlock
-                            Margin="0,20,0,0"
-                            HorizontalAlignment="Center"
-                            FontFamily="{StaticResource Iconfont}"
-                            FontSize="40"
-                            Foreground="Red"
-                            Text="&#xe61f;" />
-                        <TextBlock
-                            Margin="0,20"
-                            HorizontalAlignment="Center"
-                            FontSize="20"
-                            FontWeight="Bold"
-                            Text="股票交易" />
-                    </StackPanel>
-                    <!--  放置菜单的区域  -->
-                    <ContentControl Grid.Row="1" prism:RegionManager.RegionName="TreeMenuViewRegion" />
-                </Grid>
-            </Border>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="60" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <StackPanel
-                    Grid.RowSpan="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Panel.ZIndex="10"
-                    hc:Growl.Token="headerGrowl" />
+        <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockDefault}">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="TableButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="5,2"/>
+            <Setter Property="Padding" Value="10,2"/>
+        </Style>
+
+        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource TableButtonStyle}">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <!-- Boolean到Visibility的转换器 -->
+        <BooleanToVisibilityConverter x:Key="Boolean2VisibilityConverter"/>
+
+        <!-- 反转的Boolean到Visibility的转换器 -->
+        <vc:InverseBooleanToVisibilityConverter x:Key="InverseBoolean2VisibilityConverter"/>
+
+        <!-- 数据模板用于显示账号项 -->
+        <DataTemplate x:Key="AccountItemTemplate">
+            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="5">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto" />
-                        <ColumnDefinition />
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
-                    <ToggleButton
-                        x:Name="tgbtnDrawer"
-                        Height="30"
-                        Margin="0,2,0,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Background="Transparent"
-                        FontSize="20"
-                        Foreground="Gray">
-                        <ToggleButton.Style>
-                            <Style BasedOn="{StaticResource IconToggleButtonStyle}" TargetType="ToggleButton">
-                                <Style.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter Property="Content" Value="&#xe9c9;" />
-                                    </Trigger>
-                                    <Trigger Property="IsChecked" Value="False">
-                                        <Setter Property="Content" Value="&#xe9c8;" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ToggleButton.Style>
-                    </ToggleButton>
-                    <ContentControl Grid.Column="1" prism:RegionManager.RegionName="MainHeaderRegion" />
+
+                    <TextBlock Text="{Binding AccountId}" Grid.Column="0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding BindAccount}" Grid.Column="1" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ExpireTime}" Grid.Column="2" VerticalAlignment="Center"/>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="3" VerticalAlignment="Center">
+                        <hc:Badge Status="{Binding StatusBadgeType}" Content="{Binding Status}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="4" HorizontalAlignment="Center">
+                        <Button Content="停止" Style="{StaticResource TableButtonStyle}" 
+                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                        <Button Content="删除" Style="{StaticResource DangerButtonStyle}" 
+                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                    </StackPanel>
                 </Grid>
-                <hc:TabControl
-                    Grid.Row="1"
-                    prism:RegionManager.RegionName="MainContentRegion"
-                    BorderThickness="0,1,0,0"
-                    Style="{StaticResource TabControlInLine}">
-                    <TabControl.ItemContainerStyle>
-                        <Style BasedOn="{StaticResource TabItemInLine}" TargetType="hc:TabItem">
-                            <Setter Property="Header" Value="{Binding DataContext.PageTitle}" />
-                            <Setter Property="Margin" Value="1,0" />
-                            <Setter Property="Background" Value="{StaticResource InfoBrush}" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="TabItem">
-                                        <Grid Background="{TemplateBinding Background}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition />
-                                                <ColumnDefinition
-                                                    Width="auto"
-                                                    MinWidth="10"
-                                                    MaxWidth="30" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock
-                                                Margin="10,0,0,0"
-                                                VerticalAlignment="Center"
-                                                Foreground="White"
-                                                Text="{TemplateBinding Header}" />
-                                            <Grid
-                                                Name="close_grid"
-                                                Grid.Column="1"
-                                                Width="30"
-                                                Visibility="Collapsed">
-                                                <Button
-                                                    Name="close_btn"
-                                                    Margin="0,1,0,0"
-                                                    hc:IconElement.Geometry="{StaticResource CloseGeometry}"
-                                                    Background="Transparent"
-                                                    BorderBrush="Transparent"
-                                                    Command="{Binding DataContext.CloseCommand}"
-                                                    CommandParameter="{Binding DataContext.NavigationUri}"
-                                                    Cursor="Hand"
-                                                    Foreground="White"
-                                                    Visibility="Collapsed" />
-                                            </Grid>
-                                        </Grid>
-                                        <ControlTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding DataContext.IsCanClose}" Value="True">
-                                                <Setter TargetName="close_grid" Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="close_btn" Property="Visibility" Value="Visible" />
-                                                <Setter TargetName="close_btn" Property="Foreground" Value="#444" />
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="close_btn" Property="Visibility" Value="Visible" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </TabControl.ItemContainerStyle>
-                </hc:TabControl>
-            </Grid>
-        </DockPanel>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <WindowChrome.WindowChrome>
+        <WindowChrome NonClientFrameEdges="None" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid Margin="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- 公告区域 -->
+        <Border Grid.Row="0" CornerRadius="3">
+            <hc:RunningBlock Content="这里是滚动公告。。。这里是滚动公告。。。这里是滚动公告。" 
+                             Speed="50" Margin="10,5"/>
+        </Border>
+        <!-- 主内容区域 -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <!-- 表格标题 -->
+            <Border Grid.Row="0" Background="{DynamicResource RegionBrush}" Margin="10,10,10,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="帐号" Grid.Column="0" FontWeight="Bold" Margin="10,5"/>
+                    <TextBlock Text="绑定帐号" Grid.Column="1" FontWeight="Bold" Margin="10,5"/>
+                    <TextBlock Text="到期时间" Grid.Column="2" FontWeight="Bold" Margin="10,5"/>
+                    <TextBlock Text="状态" Grid.Column="3" FontWeight="Bold" Margin="10,5"/>
+                    <TextBlock Text="操作" Grid.Column="4" FontWeight="Bold" Margin="10,5"/>
+                </Grid>
+            </Border>
+
+            <!-- 数据列表或空状态 -->
+            <Border Grid.Row="1" Margin="10,0,10,10" BorderThickness="1" 
+                    BorderBrush="{DynamicResource BorderBrush}" CornerRadius="0,0,5,5">
+                <Grid>
+                    <!-- 有数据时显示列表 -->
+                    <ListView x:Name="AccountsListView" 
+                         ItemsSource="{Binding Accounts}"
+                         ItemTemplate="{StaticResource AccountItemTemplate}"
+                         Visibility="{Binding HasData, Converter={StaticResource Boolean2VisibilityConverter}}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         BorderThickness="0">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem" BasedOn="{StaticResource ListViewItemBaseStyle}">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+
+                    <!-- 无数据时显示提示 -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="{Binding HasData, Converter={StaticResource InverseBoolean2VisibilityConverter}}">
+                        <TextBlock Text="暂无数据" 
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextBrushSecondary}"
+                               Margin="10"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 底部按钮区域 -->
+        <Border Grid.Row="2" Background="{DynamicResource RegionBrush}" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="一键排列" Style="{StaticResource ButtonWarning}"
+                        Command="{Binding ArrangeKeysCommand}" Margin="15,0"/>
+                <Button Content="添加账号" Style="{StaticResource ButtonPrimary}"
+                        Command="{Binding AddAccountCommand}"/>
+            </StackPanel>
+        </Border>
     </Grid>
-</Window>
+</hc:Window>
