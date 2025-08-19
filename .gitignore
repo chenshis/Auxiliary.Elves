@@ -3,3 +3,14 @@
 ################################################################################
 
 /.vs
+/Auxiliary.Elves.Api/bin/Debug/net6.0
+/Auxiliary.Elves.Api/obj
+/Auxiliary.Elves.Client/bin/Debug/net6.0-windows
+/Auxiliary.Elves.Client/obj
+/Auxiliary.Elves.Client/Auxiliary.Elves.Client.csproj.user
+/Auxiliary.Elves.Domain/bin/Debug/net6.0
+/Auxiliary.Elves.Domain/obj
+/Auxiliary.Elves.Infrastructure.Config/bin/Debug/net6.0
+/Auxiliary.Elves.Infrastructure.Config/obj
+/Auxiliary.Elves.Server/bin/Debug/net6.0
+/Auxiliary.Elves.Server/obj
