@@ -14,6 +14,8 @@ namespace Auxiliary.Elves.Client.ViewModels
     public class MainViewModel : BindableBase
     {
         private bool _hasData = false;
+        private readonly IWindowService _windowService;
+
         /// <summary>
         /// 验证是否有数据
         /// </summary>
@@ -31,8 +33,9 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
-        public MainViewModel()
+        public MainViewModel(IWindowService windowService)
         {
+            this._windowService = windowService;
             Accounts = new ObservableCollection<AccountModel>();
             Init();
         }
@@ -63,7 +66,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private void Stop(AccountModel m)
         {
-
+            _windowService.ShowWindow<SessionViewModel>();
         }
 
         public ICommand DeleteCommand

@@ -24,6 +24,8 @@ namespace Auxiliary.Elves.Client
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.Register<IWindowService, WindowService>();
+            containerRegistry.Register<Window, SessionView>(nameof(SessionViewModel));
         }
     }
 
