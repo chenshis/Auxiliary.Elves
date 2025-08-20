@@ -1,12 +1,25 @@
+using Auxiliary.Elves.Api.ApiService;
+using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
 using Auxiliary.Elves.Server.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using NLog.Web;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = builder.Configuration.GetConnectionString(SystemConstant.DefaultConnection);
+
+builder.Services.AddScoped<ILoginApiService, LoginApiService>();
+
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddDbContext<AuxiliaryDbContext>((options) =>
+{
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36)));
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

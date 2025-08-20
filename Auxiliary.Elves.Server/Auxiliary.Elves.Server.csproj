@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Auxiliary.Elves.Api\Auxiliary.Elves.Api.csproj" />
+    <ProjectReference Include="..\Auxiliary.Elves.Domain\Auxiliary.Elves.Domain.csproj" />
     <ProjectReference Include="..\Auxiliary.Elves.Infrastructure.Config\Auxiliary.Elves.Infrastructure.Config.csproj" />
   </ItemGroup>
 
