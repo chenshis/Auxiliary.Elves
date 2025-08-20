@@ -20,19 +20,10 @@
     UseLayoutRounding="True"
     mc:Ignorable="d">
     <Window.Resources>
-        <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockDefault}">
-            <Setter Property="Margin" Value="10"/>
+        <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBaseStyle}">
             <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="TableButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="5,2"/>
-            <Setter Property="Padding" Value="10,2"/>
-        </Style>
-
-        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource TableButtonStyle}">
-            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,10"/>
         </Style>
         <!-- Boolean到Visibility的转换器 -->
         <BooleanToVisibilityConverter x:Key="Boolean2VisibilityConverter"/>
@@ -40,37 +31,7 @@
         <!-- 反转的Boolean到Visibility的转换器 -->
         <vc:InverseBooleanToVisibilityConverter x:Key="InverseBoolean2VisibilityConverter"/>
 
-        <!-- 数据模板用于显示账号项 -->
-        <DataTemplate x:Key="AccountItemTemplate">
-            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="5">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="3*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="3*"/>
-                    </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="{Binding AccountId}" Grid.Column="0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding BindAccount}" Grid.Column="1" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ExpireTime}" Grid.Column="2" VerticalAlignment="Center"/>
-
-                    <StackPanel Orientation="Horizontal" Grid.Column="3" VerticalAlignment="Center">
-                        <hc:Badge Status="{Binding StatusBadgeType}" Content="{Binding Status}"/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Grid.Column="4" HorizontalAlignment="Center">
-                        <Button Content="停止" Style="{StaticResource TableButtonStyle}" 
-                                Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                CommandParameter="{Binding}"/>
-                        <Button Content="删除" Style="{StaticResource DangerButtonStyle}" 
-                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                CommandParameter="{Binding}"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </DataTemplate>
     </Window.Resources>
     <WindowChrome.WindowChrome>
         <WindowChrome NonClientFrameEdges="None" UseAeroCaptionButtons="False"/>
@@ -104,11 +65,11 @@
                         <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="帐号" Grid.Column="0" FontWeight="Bold" Margin="10,5"/>
-                    <TextBlock Text="绑定帐号" Grid.Column="1" FontWeight="Bold" Margin="10,5"/>
-                    <TextBlock Text="到期时间" Grid.Column="2" FontWeight="Bold" Margin="10,5"/>
-                    <TextBlock Text="状态" Grid.Column="3" FontWeight="Bold" Margin="10,5"/>
-                    <TextBlock Text="操作" Grid.Column="4" FontWeight="Bold" Margin="10,5"/>
+                    <TextBlock Text="帐号" Grid.Column="0" FontWeight="Bold" />
+                    <TextBlock Text="绑定帐号" Grid.Column="1" FontWeight="Bold"/>
+                    <TextBlock Text="到期时间" Grid.Column="2" FontWeight="Bold" />
+                    <TextBlock Text="状态" Grid.Column="3" FontWeight="Bold" />
+                    <TextBlock Text="操作" Grid.Column="4" FontWeight="Bold" />
                 </Grid>
             </Border>
 
@@ -116,21 +77,78 @@
             <Border Grid.Row="1" Margin="10,0,10,10" BorderThickness="1" 
                     BorderBrush="{DynamicResource BorderBrush}" CornerRadius="0,0,5,5">
                 <Grid>
-                    <!-- 有数据时显示列表 -->
-                    <ListView x:Name="AccountsListView" 
-                         ItemsSource="{Binding Accounts}"
-                         ItemTemplate="{StaticResource AccountItemTemplate}"
-                         Visibility="{Binding HasData, Converter={StaticResource Boolean2VisibilityConverter}}"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         BorderThickness="0">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem" BasedOn="{StaticResource ListViewItemBaseStyle}">
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    <ItemsControl ItemsSource="{Binding Accounts}" Visibility="{Binding HasData, Converter={StaticResource Boolean2VisibilityConverter}}">
+                        <ItemsControl.Resources>
+                            <Style x:Key="tbItem" TargetType="TextBlock">
+                                <Setter Property="FontFamily" Value="Microsoft YaHei"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
-                        </ListView.ItemContainerStyle>
-                    </ListView>
+                        </ItemsControl.Resources>
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,3">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="3*"/>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="3*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="{Binding AccountId}" Grid.Column="0" Style="{StaticResource tbItem}"/>
+                                        <TextBlock Text="{Binding BindAccount}" Grid.Column="1" Style="{StaticResource tbItem}"/>
+                                        <TextBlock Text="{Binding ExpireTime, StringFormat=yyyy/MM/dd HH:mm:ss}" Grid.Column="2" Style="{StaticResource tbItem}"/>
+                                        <TextBlock  Grid.Column="3">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource tbItem}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="True">
+                                                            <Setter Property="Text" Value="运行中"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="false">
+                                                            <Setter Property="Text" Value="未运行"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <StackPanel Orientation="Horizontal" Grid.Column="4" HorizontalAlignment="Center">
+                                            <Button Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource ButtonDanger}">
+                                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="True">
+                                                                <Setter Property="Content" Value="停止"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="false">
+                                                                <Setter Property="Content" Value="启动"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Content="删除" Style="{StaticResource ButtonPrimary}" 
+                                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                     <!-- 无数据时显示提示 -->
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"

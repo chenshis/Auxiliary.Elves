@@ -17,7 +17,7 @@ namespace Auxiliary.Elves.Client.Views
     /// <summary>
     /// MainView.xaml 的交互逻辑
     /// </summary>
-    public partial class MainView
+    public partial class MainView: HandyControl.Controls.Window
     {
         public MainView()
         {
