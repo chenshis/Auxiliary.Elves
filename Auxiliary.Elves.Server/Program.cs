@@ -1,32 +1,39 @@
+using Auxiliary.Elves.Infrastructure.Config;
+using Auxiliary.Elves.Server.Exceptions;
+using NLog.Web;
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+
+builder.Services.AddMemoryCache();
+builder.Host.UseNLog();
+
+builder.WebHost.UseUrls($"http://0.0.0.0:{GetPort()}");
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateTime.Now.AddDays(index),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-});
+app.UseException();
+app.MapControllers();
 
 app.Run();
 
-internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
+
+string GetPort()
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    var configBuilder = new ConfigurationBuilder()
+   .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
+   .AddJsonFile(SystemConstant.HostFileName)
+   .Build();
+    var port = configBuilder.GetSection(SystemConstant.HostPort).Value;
+    return port;
 }
