@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Auxiliary.Elves.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,11 @@ namespace Auxiliary.Elves.Domain
         {
             _logger = loggerFactory.CreateLogger<AuxiliaryDbContext>();
         }
+
+        /// <summary>
+        /// 用户实体Db
+        /// </summary>
+        public DbSet<UserEntity> UserEntities { get; set; }
 
     }
 }

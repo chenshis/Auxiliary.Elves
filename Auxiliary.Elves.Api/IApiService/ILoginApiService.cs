@@ -16,7 +16,15 @@ namespace Auxiliary.Elves.Api.IApiService
         /// </summary>
         /// <param name="userFeatureCode">特征码</param>
         /// <returns></returns>
-        bool Register(string userFeatureCode);
+        string Register(string userFeatureCode);
+
+        /// <summary>
+        /// 生成卡密
+        /// </summary>
+        /// <param name="userId">谷歌秘钥</param>
+        /// <param name="verCode">验证码</param>
+        /// <returns></returns>
+        bool RegisterKey(string userId,string verCode);
 
         /// <summary>
         /// 登录

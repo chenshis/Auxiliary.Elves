@@ -28,15 +28,28 @@ namespace Auxiliary.Elves.Server.Controllers
         }
 
         /// <summary>
-        /// 用户注册
+        /// 注册
         /// </summary>
         /// <param name="userFeatureCode">特征码</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterRoute)]
-        public bool Register([FromBody] string userFeatureCode)
+        public string Register([FromBody] string userFeatureCode)
         {
             return LoginApiService.Register(userFeatureCode);
+        }
+
+        /// <summary>
+        /// 生成卡密
+        /// </summary>
+        /// <param name="userId">谷歌秘钥</param>
+        /// <param name="verCode">验证码</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.RegisterKeyRoute)]
+        public bool RegisterKey(string userId,string verCode)
+        {
+            return LoginApiService.RegisterKey(userId,verCode);
         }
     }
 }

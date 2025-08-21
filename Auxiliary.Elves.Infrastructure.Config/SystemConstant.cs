@@ -11,6 +11,8 @@ namespace Auxiliary.Elves.Infrastructure.Config
     /// </summary>
     public static class SystemConstant
     {
+        public const int Zero = 0;
+
         /// <summary>
         /// 登录路由
         /// </summary>
@@ -20,6 +22,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 注册路由
         /// </summary>
         public const string RegisterRoute = "v1/auxiliary/account/register";
+
+        /// <summary>
+        /// 注册卡密路由
+        /// </summary>
+        public const string RegisterKeyRoute = "v1/auxiliary/account/registerkey";
 
         /// <summary>
         /// 默认连接
