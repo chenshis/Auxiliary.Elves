@@ -21,10 +21,10 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.LoginRoute)]
-        public string Login([FromBody] AccountRequestDto accountRequest)
+        public bool Login([FromBody] AccountRequestDto accountRequest)
         {
-            var user = LoginApiService.Login(accountRequest);
-            return "";
+             
+            return LoginApiService.Login(accountRequest);
         }
 
         /// <summary>

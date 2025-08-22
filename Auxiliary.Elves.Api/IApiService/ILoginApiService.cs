@@ -10,6 +10,13 @@ namespace Auxiliary.Elves.Api.IApiService
 {
     public interface ILoginApiService
     {
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="username">账号</param>
+        /// <param name="password">卡密</param>
+        /// <returns></returns>
+        bool Login(AccountRequestDto accountRequest);
 
         /// <summary>
         /// 用户注册
@@ -25,14 +32,5 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="verCode">验证码</param>
         /// <returns></returns>
         bool RegisterKey(string userId,string verCode);
-
-        /// <summary>
-        /// 登录
-        /// </summary>
-        /// <param name="username">账号</param>
-        /// <param name="password">卡密</param>
-        /// <returns></returns>
-        ApiResponse<string> Login(AccountRequestDto accountRequest);
-
     }
 }

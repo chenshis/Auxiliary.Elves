@@ -9,13 +9,23 @@ namespace Auxiliary.Elves.Api.Dtos
     public class AccountRequestDto
     {
         /// <summary>
-        /// 用户名
+        /// 账号
         /// </summary>
         public string UserName { get; set; }
 
         /// <summary>
-        /// 密码
+        /// 卡
+        /// </summary>
+        public string UserKeyId { get; set; }
+
+        /// <summary>
+        /// 卡密
         /// </summary>
         public string Password { get; set; }
+
+        /// <summary>
+        /// Ip
+        /// </summary>
+        public string Ip { get; set; }
     }
 }

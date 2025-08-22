@@ -11,6 +11,9 @@ namespace Auxiliary.Elves.Infrastructure.Config
     /// </summary>
     public static class SystemConstant
     {
+        public const int MaxDay = 30;
+        public const int MaxHour = 24;
+
         public const int Zero = 0;
 
         /// <summary>

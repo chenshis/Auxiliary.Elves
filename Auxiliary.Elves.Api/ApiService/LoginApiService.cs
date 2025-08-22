@@ -4,11 +4,6 @@ using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -16,16 +11,51 @@ namespace Auxiliary.Elves.Api.ApiService
     {
         private readonly AuxiliaryDbContext _dbContext;
 
-
-
         public LoginApiService(AuxiliaryDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public ApiResponse<string> Login(AccountRequestDto accountRequest)
+        public bool Login(AccountRequestDto accountRequest)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(accountRequest.UserName) || string.IsNullOrWhiteSpace(accountRequest.UserKeyId) ||
+                string.IsNullOrWhiteSpace(accountRequest.Password) || string.IsNullOrWhiteSpace(accountRequest.Ip))
+                return false;
+
+
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userid == accountRequest.UserName
+                                                                        && t.Userkeyid == accountRequest.UserKeyId
+                                                                        && t.Userkey == accountRequest.Password);
+
+            if (userEntity == null)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(userEntity.Userkeyip))
+            {
+                if ((DateTime.Now - userEntity.Userkeylastdate.Value).Days > SystemConstant.MaxDay)
+                    return false;
+
+                if (!userEntity.Isonline && (DateTime.Now - userEntity.UpdateTime).Hours < SystemConstant.MaxHour)
+                    return false;
+
+                if (userEntity.Userkeyip != accountRequest.Ip)
+                    userEntity.Isonline = false;
+            }
+            else
+            {
+                userEntity.Userkeylastdate = DateTime.Now;
+                userEntity.Isonline = true;
+            }
+
+            userEntity.Userkeyip = accountRequest.Ip;
+            _dbContext.UserKeyEntities.Update(userEntity);
+
+            var result = _dbContext.SaveChanges();
+
+            if (result < SystemConstant.Zero)
+                return false;
+
+            return userEntity.Isonline;
         }
 
         public string Register(string userFeatureCode)
@@ -55,7 +85,7 @@ namespace Auxiliary.Elves.Api.ApiService
 
             do
             {
-                userName = _rnd.Next(1000000, 10000000).ToString(); // 7位数
+                userName = _rnd.Next(100000000, 100000000).ToString(); // 8位数
             } while (!_used.Add(userName)); // HashSet 保证唯一
 
             do
@@ -81,7 +111,45 @@ namespace Auxiliary.Elves.Api.ApiService
             if (!isAuthenticator)
                 return false;
 
-            return true;
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userid == userId);
+
+            if (userEntity == null)
+                return false;
+
+            Random _rnd = new Random();
+            HashSet<string> _used = new HashSet<string>();
+
+            Random _rndKeyId = new Random();
+            HashSet<string> _usedKey = new HashSet<string>();
+
+            string userKey;
+            string userKeyId;
+
+            foreach (var item in _dbContext.UserKeyEntities.ToList())
+            {
+                _used.Add(item.Userkey);
+                _usedKey.Add(item.Userkeyid);
+            }
+
+
+            do
+            {
+                userKeyId = CardGenerator.GenerateCardNumber(8);
+            } while (!_usedKey.Add(userKeyId));
+
+            do
+            {
+                userKey = CardGenerator.GenerateCardNumber(6);
+            } while (!_used.Add(userKey));
+
+            UserKeyEntity keyEntity = new UserKeyEntity();
+            keyEntity.Userid = userEntity.Username;
+            keyEntity.Userkeyid = userKeyId;
+            keyEntity.Userkey = userKey;
+            keyEntity.Isonline = false;
+            _dbContext.UserKeyEntities.Add(keyEntity);
+            var result = _dbContext.SaveChanges();
+            return result > SystemConstant.Zero;
         }
     }
 }
