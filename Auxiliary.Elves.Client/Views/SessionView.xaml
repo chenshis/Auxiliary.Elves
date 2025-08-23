@@ -1,38 +1,23 @@
-﻿<Window x:Class="Auxiliary.Elves.Client.Views.SessionView"
+﻿<hc:Window x:Class="Auxiliary.Elves.Client.Views.SessionView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Auxiliary.Elves.Client.Views"
         xmlns:prism="http://prismlibrary.com/"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
         prism:ViewModelLocator.AutoWireViewModel="True"
         xmlns:wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow"
         mc:Ignorable="d"
         Title="SessionView" Height="428" Width="328">
+    <WindowChrome.WindowChrome>
+        <WindowChrome NonClientFrameEdges="None" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
     <Grid>
         <!-- WebView2 视频播放器 -->
-        <wpf:WebView2 x:Name="webView" 
-                      SourceChanged="webView_SourceChanged"
-                      NavigationCompleted="webView_NavigationCompleted"/>
+        <wpf:WebView2 x:Name="webView" />
 
-        <!-- 顶部标题栏 -->
-        <Border x:Name="titleOverlay" Background="#CC000000" Height="40" VerticalAlignment="Top">
-            <TextBlock x:Name="txtTitle" Text="视频播放器" Foreground="White" 
-                       FontSize="16" FontWeight="Bold" 
-                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        </Border>
-
-        <!-- 底部遮罩层 -->
-        <Border x:Name="bottomOverlay" Background="#CC000000" Height="60" VerticalAlignment="Bottom">
-            <TextBlock x:Name="txtBottom" Text="准备播放..." Foreground="White" 
-                       FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        </Border>
-
-        <!-- 结算动画 -->
-        <Border x:Name="animationOverlay" Background="#CC000000" Visibility="Collapsed">
-            <Canvas x:Name="animationCanvas">
-                <!-- 动画内容将通过代码实现 -->
-            </Canvas>
-        </Border>
     </Grid>
-</Window>
+</hc:Window>

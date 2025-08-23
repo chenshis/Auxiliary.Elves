@@ -7,6 +7,8 @@ using Prism.Regions;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Security.Principal;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Auxiliary.Elves.Client.ViewModels
@@ -38,11 +40,14 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
+        private Dictionary<AccountModel, SessionView> SessionViews { get; set; }
+
         public MainViewModel(IWindowService windowService, IDialogService dialogService)
         {
             this._windowService = windowService;
             this._dialogService = dialogService;
             Accounts = new ObservableCollection<AccountModel>();
+            SessionViews = new Dictionary<AccountModel, SessionView>();
             DataQuery();
         }
 
@@ -51,33 +56,38 @@ namespace Auxiliary.Elves.Client.ViewModels
         /// </summary>
         private void DataQuery()
         {
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 5; i++)
             {
-                Accounts.Add(new AccountModel()
+                var account = new AccountModel()
                 {
                     Id = i + 1,
                     AccountId = $"Test{i + 1}",
                     BindAccount = new Random().Next(100000, 99999999).ToString(),
                     ExpireTime = DateTime.Now.AddDays(30 - i),
-                    Status = i % 2 == 0 ? true : false
-                });
+                    Status = true
+                };
+                Accounts.Add(account);
+                SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
             }
             HasData = true;
         }
 
         public ICommand ToggleCommand
         {
-            get => new DelegateCommand<AccountModel>(async (m) => await Toggle(m));
+            get => new DelegateCommand<AccountModel>((m) => Toggle(m));
         }
 
-        private async Task Toggle(AccountModel m)
+        private void Toggle(AccountModel m)
         {
             m.Status = !m.Status;
-            _windowService.ShowWindow<SessionViewModel, AccountModel>(m);
-            //VideoItem item = new VideoItem();
-            //item.Title = m.AccountId;
-            //item.Url = "https://media.w3.org/2010/05/sintel/trailer.mp4";
-            //await window.PlayVideo(item);
+            if (m.Status)
+            {
+                SessionViews[m].Start();
+            }
+            else
+            {
+                SessionViews[m].Stop();
+            }
         }
 
         public ICommand DeleteCommand
@@ -97,7 +107,42 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private void SetArrangeKeys()
         {
+            // 获取主屏幕的工作区域（排除任务栏）
+            var workingArea = SystemParameters.WorkArea;
 
+            // 计算网格布局
+            int columns = (int)Math.Floor(workingArea.Width / 328);
+            if (columns <= 0) columns = 1;
+
+            int i = 0;
+            foreach (var item in SessionViews)
+            {
+                int row = i / columns;
+                int col = i % columns;
+
+                double left = workingArea.Left + col * 328;
+                double top = workingArea.Top + row * 428;
+
+                // 确保窗口不会超出屏幕右边界
+                if (left + 328 > workingArea.Right)
+                {
+                    left = workingArea.Right - 328;
+                }
+
+                // 确保窗口不会超出屏幕底部
+                if (top + 428 > workingArea.Bottom)
+                {
+                    top = workingArea.Bottom - 428;
+                }
+
+
+                item.Value.Left = left;
+                item.Value.Top = top;
+                item.Value.WindowState = WindowState.Normal;
+
+
+                i++;
+            }
         }
 
         public ICommand AddAccountCommand

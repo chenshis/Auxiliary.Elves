@@ -10,7 +10,7 @@ namespace Auxiliary.Elves.Client
 {
     public interface IWindowService
     {
-        void ShowWindow<TViewModel, TParameter>(TParameter parameter) where TViewModel : class;
+        Window ShowWindow<TViewModel, TParameter>(TParameter parameter) where TViewModel : class;
 
         Window GetWindow<TViewModel, TParameter>(TParameter parameter) where TViewModel : class;
     }
@@ -24,10 +24,12 @@ namespace Auxiliary.Elves.Client
             _container = container;
         }
 
-        public void ShowWindow<TViewModel, TParameter>(TParameter parameter)
+        public Window ShowWindow<TViewModel, TParameter>(TParameter parameter)
             where TViewModel : class
         {
-            GetWindow<TViewModel, TParameter>(parameter).Show();
+            var window = GetWindow<TViewModel, TParameter>(parameter);
+            window.Show();
+            return window;
         }
 
         public Window GetWindow<TViewModel, TParameter>(TParameter parameter)

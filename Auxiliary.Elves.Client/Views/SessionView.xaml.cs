@@ -6,194 +6,325 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Auxiliary.Elves.Client.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Wpf;
 
 namespace Auxiliary.Elves.Client.Views
 {
-    public partial class SessionView : Window
+    public partial class SessionView : HandyControl.Controls.Window
     {
-        private bool isVideoEnded = false;
-
         public SessionView()
         {
             InitializeComponent();
-            InitializeWebView();
+            Loaded += async (sender, e) => await InitializeWebView2Async();
         }
 
-        private async void InitializeWebView()
+        public async Task InitializeWebView2Async()
         {
+
             string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
             await webView.EnsureCoreWebView2Async(env);
-            webView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = true;
-            webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
 
-            // 监听控制事件
-            webView.CoreWebView2.AddHostObjectToScript("controller", new VideoController(this));
+            // 初始化WebView2
+            webView.NavigationCompleted += WebView_NavigationCompleted;
+            webView.WebMessageReceived += WebView_WebMessageReceived;
+            webView.Source = new Uri(System.IO.Path.GetFullPath("video_player.html"));
+            await webView.EnsureCoreWebView2Async();
+            webView.NavigateToString(HtmlContent);
+            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
+        }
 
-            PlayVideo(new VideoItem
+        private async void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            var webView = sender as WebView2;
+            if (webView != null && webView.CoreWebView2 != null)
             {
-                Title = "测试",
-                Url = "https://media.w3.org/2010/05/sintel/trailer.mp4"
-            });
+                // 设置初始视频列表
+                string[] videos = {
+                    "https://media.w3.org/2010/05/sintel/trailer.mp4",
+                    "https://media.w3.org/2010/05/sintel/trailer.mp4",
+                    "https://media.w3.org/2010/05/sintel/trailer.mp4"
+                };
+
+
+                string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
+                await webView.ExecuteScriptAsync(script);
+            }
         }
 
-        public void PlayVideo(VideoItem video)
+        private void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
-            txtTitle.Text = video.Title;
-            txtBottom.Text = $"正在播放: {video.Title}";
+            var webView = sender as WebView2;
+            string message = e.TryGetWebMessageAsString();
 
-            // 构建HTML视频播放器
-            string htmlContent = $@"
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body {{ margin: 0; padding: 0; background-color: black; }}
-                    video {{ width: 100%; height: 100%; }}
-                </style>
-            </head>
-            <body>
-                <video id='videoPlayer' controls autoplay>
-                    <source src='{video.Url}' type='video/mp4'>
-                    您的浏览器不支持HTML5视频播放
-                </video>
-                <script>
-                    const video = document.getElementById('videoPlayer');
-                    
-                    video.addEventListener('ended', function() {{
-                        window.chrome.webview.hostObjects.controller.VideoEnded();
-                    }});
-                    
-                    video.addEventListener('play', function() {{
-                        window.chrome.webview.hostObjects.controller.VideoPlaying();
-                    }});
-                    
-                    video.addEventListener('pause', function() {{
-                        window.chrome.webview.hostObjects.controller.VideoPaused();
-                    }});
-                </script>
-            </body>
-            </html>";
+            try
+            {
+                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(message);
+                string action = data.action.ToString();
 
-            webView.NavigateToString(htmlContent);
+                if (action == "settlementComplete")
+                {
+                    // 执行结算任务
+                    bool success = ExecuteSettlementTask();
+
+                    // 通知WebView结算结果
+                    string resultScript = $"settlementResult({success.ToString().ToLower()});";
+                    webView?.ExecuteScriptAsync(resultScript);
+
+                }
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
-        public void Play()
+        private bool ExecuteSettlementTask()
         {
-            webView.ExecuteScriptAsync("document.getElementById('videoPlayer').play();");
-            txtBottom.Text = "播放中";
+            // 模拟结算任务执行
+            System.Threading.Thread.Sleep(2000); // 模拟耗时操作
+            return true; // 假设总是成功
         }
+
+        public void Start()
+        {
+            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
+        }
+
 
         public void Stop()
         {
-            webView.ExecuteScriptAsync("document.getElementById('videoPlayer').pause();");
-            txtBottom.Text = "已暂停";
+            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"stop\"}");
         }
 
-        private void webView_SourceChanged(object sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e)
-        {
-            // 可以添加源改变时的处理逻辑
+
+        public string HtmlContent { get; set; }
+
+       = @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <title>视频播放器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #1e1e1e;
+            color: white;
+            overflow: hidden;
+            position: relative;
         }
-
-        private void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
-        {
-            // 导航完成时的处理
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-
-        public void OnVideoEnded()
-        {
-            isVideoEnded = true;
-            txtBottom.Text = "播放完成，显示结算动画";
-
-            // 显示结算动画
-            ShowSettlementAnimation();
+        .video-container {
+            flex: 1;
+            position: relative;
+            background: #000;
         }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 20px;
+            color: white;
+            z-index: 50;
+        }
+        
+        .overlay-text {
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+        
+        .settlement-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 30, 30, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ca1af;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .settlement-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .success-message {
+            color: #4CAF50;
+            font-size: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""video-container"">
+            <video id=""videoPlayer"" controls></video>
+            
+            <div class=""overlay"">
+                <div class=""overlay-text"" id=""bottomText"">视频播放中...</div>
+            </div>
+            
+            <div class=""settlement-screen"" id=""settlementScreen"">
+                <div class=""loading-spinner""></div>
+                <div class=""settlement-text"">结算任务执行中，请稍候...</div>
+                <div class=""success-message"" id=""successMessage"">✓ 结算成功！</div>
+            </div>
+        </div>
+    </div>
 
-        private void ShowSettlementAnimation()
-        {
-            animationOverlay.Visibility = Visibility.Visible;
-            animationCanvas.Children.Clear();
-
-            // 创建动画元素
-            var textBlock = new TextBlock
-            {
-                Text = "任务完成!",
-                Foreground = Brushes.White,
-                FontSize = 32,
-                FontWeight = FontWeights.Bold
-            };
-
-            Canvas.SetLeft(textBlock, 200);
-            Canvas.SetTop(textBlock, 200);
-            animationCanvas.Children.Add(textBlock);
-
-            // 创建星星动画
-            for (int i = 0; i < 10; i++)
-            {
-                var star = new Ellipse
-                {
-                    Width = 10,
-                    Height = 10,
-                    Fill = Brushes.Yellow
-                };
-
-                Canvas.SetLeft(star, new Random().Next(100, 500));
-                Canvas.SetTop(star, new Random().Next(100, 300));
-                animationCanvas.Children.Add(star);
-
-                // 星星动画
-                DoubleAnimation opacityAnim = new DoubleAnimation
-                {
-                    From = 0,
-                    To = 1,
-                    Duration = TimeSpan.FromSeconds(0.5),
-                    AutoReverse = true,
-                    RepeatBehavior = RepeatBehavior.Forever
-                };
-
-                star.BeginAnimation(Ellipse.OpacityProperty, opacityAnim);
+    <script>
+        let videoElement = document.getElementById('videoPlayer');
+        let bottomText = document.getElementById('bottomText');
+        let settlementScreen = document.getElementById('settlementScreen');
+        let successMessage = document.getElementById('successMessage');
+        
+        let videoList = [];
+        let currentVideoIndex = 0;
+        
+        // 初始化播放器
+        function initializePlayer(videos) {
+            videoList = videos;
+            if (videoList.length > 0) {
+                playVideo(0);
             }
-
-            // 3秒后隐藏动画并播放下一个视频
-            var timer = new System.Windows.Threading.DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(3);
-            timer.Tick += (s, args) =>
-            {
-                timer.Stop();
-                animationOverlay.Visibility = Visibility.Collapsed;
-                isVideoEnded = false;
-
-                // 通知主窗口播放下一个视频
-                //((MainWindow)Application.Current.MainWindow).PlayNextVideo();
+            
+            // 监听来自WPF的消息
+            window.chrome.webview.addEventListener('message', event => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.action === 'start') {
+                        videoElement.play();
+                    } else if (data.action === 'stop') {
+                        videoElement.pause();
+                    }
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            });
+        }
+        
+        // 播放指定索引的视频
+        function playVideo(index) {
+            if (index >= videoList.length) {
+                console.log('所有视频播放完毕');
+                return;
+            }
+            
+            currentVideoIndex = index;
+            videoElement.src = videoList[index];
+            bottomText.textContent = `正在播放: 视频 ${index + 1}/${videoList.length}`;
+            
+            videoElement.onloadeddata = () => {
+                videoElement.play();
             };
-            timer.Start();
+            
+            videoElement.onended = () => {
+                // 视频播放完成，显示结算屏幕
+                showSettlementScreen();
+            };
         }
-    }
-
-    // 用于WebView2和WPF之间的通信
-    public class VideoController
-    {
-        private SessionView window;
-
-        public VideoController(SessionView window)
-        {
-            this.window = window;
+        
+        // 显示结算屏幕
+        function showSettlementScreen() {
+            settlementScreen.style.display = 'flex';
+            successMessage.style.display = 'none';
+            
+            // 通知WPF开始结算任务
+            window.chrome.webview.postMessage(JSON.stringify({
+                action: 'settlementComplete',
+                videoId: currentVideoIndex
+            }));
         }
-
-        public void VideoEnded()
-        {
-            window.Dispatcher.Invoke(() => window.OnVideoEnded());
+        
+        // 处理结算结果
+        function settlementResult(success) {
+            if (success) {
+                // 显示成功消息
+                document.querySelector('.settlement-text').textContent = '结算完成！';
+                document.querySelector('.loading-spinner').style.display = 'none';
+                successMessage.style.display = 'block';
+                
+                // 2秒后播放下一个视频
+                setTimeout(() => {
+                    settlementScreen.style.display = 'none';
+                    playVideo(currentVideoIndex + 1);
+                }, 2000);
+            } else {
+                // 处理结算失败
+                document.querySelector('.settlement-text').textContent = '结算失败，请重试...';
+                document.querySelector('.loading-spinner').style.display = 'none';
+                
+                // 5秒后重试
+                setTimeout(() => {
+                    settlementScreen.style.display = 'none';
+                    playVideo(currentVideoIndex);
+                }, 5000);
+            }
         }
+        
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 等待WebView2注入对象
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.addEventListener('message', event => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.action === 'start') {
+                            videoElement.play();
+                        } else if (data.action === 'stop') {
+                            videoElement.pause();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing message:', e);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>";
 
-        public void VideoPlaying()
-        {
-            // 可以添加播放状态更新
-        }
 
-        public void VideoPaused()
-        {
-            // 可以添加暂停状态更新
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Auxiliary.Elves.Client.Models;
+using Microsoft.Web.WebView2.Wpf;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Auxiliary.Elves.Client.ViewModels
     {
         public SessionViewModel()
         {
-                
+
         }
 
         public void ApplyParameters<AccountModel>(AccountModel parameter)
