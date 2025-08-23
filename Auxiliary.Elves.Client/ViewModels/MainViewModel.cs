@@ -97,7 +97,13 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private void Delete(AccountModel m)
         {
-
+            SessionViews[m].Close();
+            SessionViews.Remove(m);
+            Accounts.Remove(m);
+            if (Accounts == null || Accounts.Count() <= 0)
+            {
+                HasData = false;
+            }
         }
 
         public ICommand ArrangeKeysCommand
