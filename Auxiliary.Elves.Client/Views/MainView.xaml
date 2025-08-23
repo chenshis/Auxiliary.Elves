@@ -124,7 +124,7 @@
                                             </TextBlock.Style>
                                         </TextBlock>
                                         <StackPanel Orientation="Horizontal" Grid.Column="4" HorizontalAlignment="Center">
-                                            <Button Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            <Button Command="{Binding DataContext.ToggleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource ButtonDanger}">

@@ -1,7 +1,10 @@
 ﻿using Auxiliary.Elves.Client.Models;
+using Auxiliary.Elves.Client.Views;
+using Auxiliary.Elves.Infrastructure.Config;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
@@ -14,7 +17,6 @@ namespace Auxiliary.Elves.Client.ViewModels
     public class MainViewModel : BindableBase
     {
         private bool _hasData = false;
-        private readonly IWindowService _windowService;
 
         /// <summary>
         /// 验证是否有数据
@@ -31,11 +33,15 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
         }
 
+        private readonly IWindowService _windowService;
+        private readonly IDialogService _dialogService;
+
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
-        public MainViewModel(IWindowService windowService)
+        public MainViewModel(IWindowService windowService, IDialogService dialogService)
         {
             this._windowService = windowService;
+            this._dialogService = dialogService;
             Accounts = new ObservableCollection<AccountModel>();
             Init();
         }
@@ -59,14 +65,15 @@ namespace Auxiliary.Elves.Client.ViewModels
             HasData = true;
         }
 
-        public ICommand StopCommand
+        public ICommand ToggleCommand
         {
-            get => new DelegateCommand<AccountModel>((m) => Stop(m));
+            get => new DelegateCommand<AccountModel>((m) => Toggle(m));
         }
 
-        private void Stop(AccountModel m)
+        private void Toggle(AccountModel m)
         {
-            _windowService.ShowWindow<SessionViewModel>();
+            m.Status = !m.Status;
+            _windowService.ShowWindow<SessionViewModel, AccountModel>(m);
         }
 
         public ICommand DeleteCommand
@@ -96,7 +103,31 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private void SetAccount()
         {
+            IsEnable = false;
+            _dialogService.ShowDialog(
+                nameof(AddUserDialogView),
+                result =>
+                {
+                    if (result.Result == ButtonResult.OK)
+                    {
+                        //this.Refresh();
+                    }
+                });
 
+            IsEnable = true;
+        }
+
+
+        private bool _isEnable = true;
+
+
+        /// <summary>
+        /// 是否启用命令
+        /// </summary>
+        public bool IsEnable
+        {
+            get { return _isEnable; }
+            set { SetProperty(ref _isEnable, value); }
         }
 
 

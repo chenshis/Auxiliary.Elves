@@ -26,6 +26,7 @@ namespace Auxiliary.Elves.Client
         {
             containerRegistry.Register<IWindowService, WindowService>();
             containerRegistry.Register<Window, SessionView>(nameof(SessionViewModel));
+            containerRegistry.RegisterDialog<AddUserDialogView>();
         }
     }
 
