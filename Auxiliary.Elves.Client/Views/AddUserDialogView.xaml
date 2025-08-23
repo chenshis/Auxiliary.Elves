@@ -48,7 +48,7 @@
             <!-- 带动画的错误提示 -->
             <Border 
         x:Name="ErrorBorder"
-        Margin="110,10,0,0"
+        Margin="10,10,0,0"
         Padding="8,5"
         CornerRadius="4"
         Background="#FFFEF2F2"
@@ -58,6 +58,7 @@
         Visibility="{Binding ErrorMessage, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}">
                 <TextBlock
             VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
             FontSize="14"
             Foreground="#FFE53935"
             Text="{Binding ErrorMessage}"
@@ -112,8 +113,8 @@
                 FontSize="14"
                 Style="{StaticResource TextBoxExtend}"
                 Text="{Binding Contacts}" />
-          
-            
+
+
         </StackPanel>
         <Border
             Grid.Row="2"

@@ -43,13 +43,13 @@ namespace Auxiliary.Elves.Client.ViewModels
             this._windowService = windowService;
             this._dialogService = dialogService;
             Accounts = new ObservableCollection<AccountModel>();
-            Init();
+            DataQuery();
         }
 
         /// <summary>
         /// 初始化
         /// </summary>
-        private void Init()
+        private void DataQuery()
         {
             for (int i = 0; i < 20; i++)
             {
@@ -67,13 +67,17 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public ICommand ToggleCommand
         {
-            get => new DelegateCommand<AccountModel>((m) => Toggle(m));
+            get => new DelegateCommand<AccountModel>(async (m) => await Toggle(m));
         }
 
-        private void Toggle(AccountModel m)
+        private async Task Toggle(AccountModel m)
         {
             m.Status = !m.Status;
             _windowService.ShowWindow<SessionViewModel, AccountModel>(m);
+            //VideoItem item = new VideoItem();
+            //item.Title = m.AccountId;
+            //item.Url = "https://media.w3.org/2010/05/sintel/trailer.mp4";
+            //await window.PlayVideo(item);
         }
 
         public ICommand DeleteCommand
@@ -110,7 +114,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 {
                     if (result.Result == ButtonResult.OK)
                     {
-                        //this.Refresh();
+                        DataQuery();
                     }
                 });
 
