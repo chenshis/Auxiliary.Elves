@@ -1,4 +1,5 @@
 ﻿using Auxiliary.Elves.Client.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
 using Prism.Mvvm;
 using System;
@@ -11,9 +12,11 @@ namespace Auxiliary.Elves.Client.ViewModels
 {
     public class SessionViewModel : BindableBase, IParameterReceiver
     {
-        public SessionViewModel()
-        {
+        public readonly ILogger<SessionViewModel> _logger;
 
+        public SessionViewModel(ILogger<SessionViewModel> logger)
+        {
+            this._logger = logger;
         }
 
         public void ApplyParameters<AccountModel>(AccountModel parameter)

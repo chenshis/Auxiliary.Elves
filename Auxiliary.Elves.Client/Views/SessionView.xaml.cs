@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +7,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Auxiliary.Elves.Client.Models;
+using Auxiliary.Elves.Client.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 
@@ -22,18 +25,44 @@ namespace Auxiliary.Elves.Client.Views
 
         public async Task InitializeWebView2Async()
         {
+            var model = this.DataContext as SessionViewModel;
+            try
+            {
+                string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
+                if (!Directory.Exists(userDataFolder))
+                {
+                    Directory.CreateDirectory(userDataFolder);
+                }
+                var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
+                await webView.EnsureCoreWebView2Async(env);
+                // 初始化WebView2
+                webView.NavigationCompleted += WebView_NavigationCompleted;
+                webView.WebMessageReceived += WebView_WebMessageReceived;
+                webView.Source = new Uri(System.IO.Path.GetFullPath("video_player.html"));
+                await webView.EnsureCoreWebView2Async();
+                webView.NavigateToString(HtmlContent);
+                webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
 
-            string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
-            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
-            await webView.EnsureCoreWebView2Async(env);
+            }
+            catch (Exception ex)
+            {
+                model._logger.LogError(ex, "WebView2 initialization failed");
 
-            // 初始化WebView2
-            webView.NavigationCompleted += WebView_NavigationCompleted;
-            webView.WebMessageReceived += WebView_WebMessageReceived;
-            webView.Source = new Uri(System.IO.Path.GetFullPath("video_player.html"));
-            await webView.EnsureCoreWebView2Async();
-            webView.NavigateToString(HtmlContent);
-            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
+                // 提供用户友好的错误信息
+                if (ex.Message.Contains("runtime") || ex.Message.Contains("not installed"))
+                {
+                    // 提示用户安装 WebView2 Runtime
+                    MessageBox.Show("需要安装 WebView2 Runtime 才能正常运行。请从微软官网下载安装。",
+                                   "运行时缺失", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    // 可选：打开下载页面
+                    System.Diagnostics.Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://developer.microsoft.com/zh-cn/microsoft-edge/webview2/",
+                        UseShellExecute = true
+                    });
+                }
+            }
         }
 
         private async void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)

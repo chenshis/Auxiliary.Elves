@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NLog.Extensions.Logging;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Unity;
@@ -27,6 +28,21 @@ namespace Auxiliary.Elves.Client
             containerRegistry.Register<IWindowService, WindowService>();
             containerRegistry.Register<Window, SessionView>(nameof(SessionViewModel));
             containerRegistry.RegisterDialog<AddUserDialogView>();
+            // service collection 集合转换
+            if (containerRegistry is IContainerExtension container)
+            {
+                // 注入 httpClient
+                container.CreateServiceProvider((services) =>
+                {
+                    services.AddHttpClient();
+                    services.AddLogging(configure =>
+                    {
+                        configure.ClearProviders();
+                        configure.SetMinimumLevel(LogLevel.Trace);
+                        configure.AddNLog();
+                    });
+                });
+            }
         }
     }
 

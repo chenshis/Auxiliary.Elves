@@ -19,6 +19,7 @@
     WindowStartupLocation="CenterScreen"
     SnapsToDevicePixels="True" 
     UseLayoutRounding="True"
+    Icon="../Assets/logo.ico"
     mc:Ignorable="d">
     <Window.Resources>
         <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBaseStyle}">

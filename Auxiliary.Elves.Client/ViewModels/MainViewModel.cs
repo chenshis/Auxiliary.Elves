@@ -44,15 +44,18 @@ namespace Auxiliary.Elves.Client.ViewModels
         private int _port = 9527;
         private readonly IWindowService _windowService;
         private readonly IDialogService _dialogService;
+        private readonly ILogger<MainViewModel> _logger;
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
         private Dictionary<AccountModel, SessionView> SessionViews { get; set; }
 
-        public MainViewModel(IWindowService windowService, IDialogService dialogService)
+        public MainViewModel(IWindowService windowService, IDialogService dialogService,
+            ILogger<MainViewModel> logger)
         {
             this._windowService = windowService;
             this._dialogService = dialogService;
+            this._logger = logger;
             Accounts = new ObservableCollection<AccountModel>();
             SessionViews = new Dictionary<AccountModel, SessionView>();
             StartHost();
@@ -77,6 +80,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                     })
                     .Configure(app =>
                     {
+
                         var baseDic = AppDomain.CurrentDomain.BaseDirectory;
                         var videoDirectory = Path.Combine(baseDic, "videos");
                         if (!Directory.Exists(videoDirectory))
@@ -84,6 +88,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                             Directory.CreateDirectory(videoDirectory);
                         }
 
+                        _logger.LogInformation($"print video server address:{videoDirectory}");
                         // 启用静态文件服务
                         app.UseStaticFiles(new StaticFileOptions
                         {
@@ -120,6 +125,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 MessageBox.Show($"文件服务启动失败: {ex.Message}");
             }
         }
@@ -143,7 +149,21 @@ namespace Auxiliary.Elves.Client.ViewModels
         /// </summary>
         private void DataQuery()
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 2; i++)
+            {
+                var account = new AccountModel()
+                {
+                    Id = i + 1,
+                    AccountId = $"Test{i + 1}",
+                    BindAccount = new Random().Next(100000, 99999999).ToString(),
+                    ExpireTime = DateTime.Now.AddDays(30 - i),
+                    Status = true
+                };
+                Accounts.Add(account);
+                SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
+            }
+            HasData = true;
+            for (int i = 0; i < 2; i++)
             {
                 var account = new AccountModel()
                 {
