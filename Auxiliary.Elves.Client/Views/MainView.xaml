@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hc="https://handyorg.github.io/handycontrol"
     xmlns:local="clr-namespace:Auxiliary.Elves.Client.Views"
+    xmlns:i ="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:vc ="clr-namespace:Auxiliary.Elves.Client.Converters"
@@ -36,6 +37,19 @@
     <WindowChrome.WindowChrome>
         <WindowChrome NonClientFrameEdges="None" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
+    <i:Interaction.Triggers>
+        <!-- 窗口关闭事件 -->
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding WindowClosingCommand}" 
+                                 PassEventArgsToCommand="True"/>
+        </i:EventTrigger>
+
+        <!-- 窗口关闭后事件 -->
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding WindowClosedCommand}" 
+                                 PassEventArgsToCommand="True"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
 
     <Grid Margin="1">
         <Grid.RowDefinitions>

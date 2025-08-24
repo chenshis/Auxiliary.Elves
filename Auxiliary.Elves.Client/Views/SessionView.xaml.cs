@@ -43,9 +43,7 @@ namespace Auxiliary.Elves.Client.Views
             {
                 // 设置初始视频列表
                 string[] videos = {
-                    "https://media.w3.org/2010/05/sintel/trailer.mp4",
-                    "https://media.w3.org/2010/05/sintel/trailer.mp4",
-                    "https://media.w3.org/2010/05/sintel/trailer.mp4"
+                    "http://localhost:9527/trailer.mp4"
                 };
 
 
@@ -54,7 +52,7 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var webView = sender as WebView2;
             string message = e.TryGetWebMessageAsString();
@@ -67,12 +65,15 @@ namespace Auxiliary.Elves.Client.Views
                 if (action == "settlementComplete")
                 {
                     // 执行结算任务
-                    bool success = ExecuteSettlementTask();
+                    bool success = await ExecuteSettlementTask();
 
                     // 通知WebView结算结果
                     string resultScript = $"settlementResult({success.ToString().ToLower()});";
-                    webView?.ExecuteScriptAsync(resultScript);
-
+                    await webView?.ExecuteScriptAsync(resultScript);
+                    // 设置初始视频列表
+                    string[] videos = { "http://localhost:9527/test.mp4" };
+                    string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
+                    await webView.ExecuteScriptAsync(script);
                 }
             }
             catch (Exception ex)
@@ -80,10 +81,10 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private bool ExecuteSettlementTask()
+        private async Task<bool> ExecuteSettlementTask()
         {
             // 模拟结算任务执行
-            System.Threading.Thread.Sleep(2000); // 模拟耗时操作
+            await Task.Delay(2000); // 模拟耗时操作
             return true; // 假设总是成功
         }
 
@@ -288,7 +289,7 @@ namespace Auxiliary.Elves.Client.Views
                 // 2秒后播放下一个视频
                 setTimeout(() => {
                     settlementScreen.style.display = 'none';
-                    playVideo(currentVideoIndex + 1);
+                    playVideo(currentVideoIndex);
                 }, 2000);
             } else {
                 // 处理结算失败
