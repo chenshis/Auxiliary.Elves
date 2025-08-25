@@ -9,10 +9,14 @@ namespace Auxiliary.Elves.Server.Controllers
     {
         public ILoginApiService LoginApiService { get; }
 
+       
+
         public AccountController(ILoginApiService loginApiService)
         {
             LoginApiService = loginApiService;
         }
+
+        
 
         /// <summary>
         /// 登录
@@ -77,5 +81,32 @@ namespace Auxiliary.Elves.Server.Controllers
         {
             return LoginApiService.RecoverAccount(userId,verCode);
         }
+
+
+        /// <summary>
+        /// 根据卡账号删除
+        /// </summary>
+        /// <param name="userkeyidserId"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.DelUserRoute)]
+
+        public bool DelUser(string userkeyidserId)
+        {
+            return LoginApiService.DeleteUser(userkeyidserId);
+        }
+
+        /// <summary>
+        /// 根据mac查找所有卡账号
+        /// </summary>
+        /// <param name="mac"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserMacRoute)]
+        public List<UserDto> GetMacAllUser(string mac)
+        {
+            return LoginApiService.GetMacAllUser(mac);
+        }
+
     }
 }

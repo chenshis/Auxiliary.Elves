@@ -41,10 +41,24 @@ namespace Auxiliary.Elves.Api.IApiService
         List<UserDto> GetAllUser(string userName, bool enabled);
 
         /// <summary>
+        /// 根据mac查询所有卡密
+        /// </summary>
+        /// <param name="mac"></param>
+        /// <returns></returns>
+        List<UserDto> GetMacAllUser(string mac);
+
+        /// <summary>
         /// 通过谷歌账号找回账号
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
         string RecoverAccount(string userId, string verCode);
+
+        /// <summary>
+        /// 根据卡账号删除
+        /// </summary>
+        /// <param name="Userkeyid"></param>
+        /// <returns></returns>
+        bool DeleteUser(string userkeyid);
     }
 }

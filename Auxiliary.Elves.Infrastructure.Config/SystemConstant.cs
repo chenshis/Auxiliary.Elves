@@ -57,6 +57,15 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string AddPointsRoute = "v1/auxiliary/points/addpoints";
 
         /// <summary>
+        /// 删除卡用户
+        /// </summary>
+        public const string DelUserRoute = "v1/auxiliary/account/deleteuser";   
+        /// <summary>
+        /// mac获取卡用户
+        /// </summary>
+        public const string UserMacRoute = "v1/auxiliary/account/getusermac";
+
+        /// <summary>
         /// 登录路由
         /// </summary>
         public const string LoginRoute = "v1/auxiliary/account/login";

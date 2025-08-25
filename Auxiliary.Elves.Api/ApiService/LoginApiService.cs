@@ -15,6 +15,21 @@ namespace Auxiliary.Elves.Api.ApiService
             _dbContext = dbContext;
         }
 
+        public bool DeleteUser(string userkeyid)
+        {
+            if (string.IsNullOrWhiteSpace(userkeyid))
+                return false;
+
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t =>  t.Userkeyid == userkeyid);
+
+            if (userEntity == null)
+                return false;
+
+            _dbContext.UserKeyEntities.Remove(userEntity);
+
+            return _dbContext.SaveChanges() > SystemConstant.Zero;
+        }
+
         public List<UserDto> GetAllUser(string userName, bool enabled)
         {
             var userDtos = new List<UserDto>(); 
@@ -40,6 +55,31 @@ namespace Auxiliary.Elves.Api.ApiService
 
             return userDtos;
 
+        }
+
+        public List<UserDto> GetMacAllUser(string mac)
+        {
+            var userDtos = new List<UserDto>();
+
+            if (string.IsNullOrWhiteSpace(mac))
+                return userDtos;
+
+            var userEntities = _dbContext.UserKeyEntities.Where(t =>t.Userkeyip==mac).ToList();
+
+            if (!userEntities.Any())
+                return userDtos;
+
+            userDtos.AddRange(
+                userEntities.Select(x => new UserDto
+                {
+                    Userkey = x.Userkey,
+                    Userkeyid = x.Userkeyid,
+                    Userkeylastdate = x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userid = x.Userid,
+                    Isonline = x.Isonline,
+                }));
+
+            return userDtos;
         }
 
         public bool Login(AccountRequestDto accountRequest)

@@ -2,6 +2,7 @@
 using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,13 @@ namespace Auxiliary.Elves.Api.ApiService
     public class AnnouncementApiService : IAnnouncementApiService
     {
         private readonly AuxiliaryDbContext _dbContext;
+        private readonly ILogger<AnnouncementApiService> _logger;
 
-        public AnnouncementApiService(AuxiliaryDbContext dbContext)
+
+        public AnnouncementApiService(AuxiliaryDbContext dbContext, ILogger<AnnouncementApiService> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         public bool AddAnnouncement(string ment)
