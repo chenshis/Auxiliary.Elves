@@ -32,5 +32,12 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="verCode">验证码</param>
         /// <returns></returns>
         bool RegisterKey(string userId,string verCode);
+
+        /// <summary>
+        /// 根据账号查询卡密信息
+        /// </summary>
+        /// <param name="userName">用户名</param>
+        /// <returns></returns>
+        List<UserDto> GetAllUser(string userName, bool enabled);
     }
 }

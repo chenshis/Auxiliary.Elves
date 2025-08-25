@@ -32,6 +32,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string RegisterKeyRoute = "v1/auxiliary/account/registerkey";
 
         /// <summary>
+        /// 用户信息
+        /// </summary>
+        public const string UserRoute = "v1/auxiliary/account/queryuser";
+
+        /// <summary>
         /// 默认连接
         /// </summary>
         public const string DefaultConnection = nameof(DefaultConnection);

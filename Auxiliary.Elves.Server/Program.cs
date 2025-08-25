@@ -13,6 +13,18 @@ var connectionString = builder.Configuration.GetConnectionString(SystemConstant.
 
 builder.Services.AddScoped<ILoginApiService, LoginApiService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()   // 允许所有来源
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();
 
@@ -31,6 +43,8 @@ builder.Host.UseNLog();
 
 builder.WebHost.UseUrls($"http://0.0.0.0:{GetPort()}");
 var app = builder.Build();
+
+app.UseCors("AllowAll");  // 开启 CORS
 
 app.UseSwagger();
 app.UseSwaggerUI();

@@ -21,6 +21,11 @@ namespace Auxiliary.Elves.Server
                 return;
             }
 
+            if (context.Result is FileResult)
+            {
+                return;
+            }
+
             var ignoreWrapper = IsIgnoreWrappedApi(context);
             if (!ignoreWrapper)
             {
@@ -79,6 +84,7 @@ namespace Auxiliary.Elves.Server
         /// <returns></returns>
         private static object GetWrapperData(ActionExecutedContext context)
         {
+           
             if (context.Result is ObjectResult objectResult) return objectResult.Value;
             if (context.Result is ContentResult contentResult) return contentResult.Content;
             if (context.Result is JsonResult jsonResult) return jsonResult.Value;

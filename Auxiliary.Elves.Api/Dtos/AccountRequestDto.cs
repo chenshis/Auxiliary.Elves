@@ -24,8 +24,9 @@ namespace Auxiliary.Elves.Api.Dtos
         public string Password { get; set; }
 
         /// <summary>
-        /// Ip
+        /// Mac
         /// </summary>
-        public string Ip { get; set; }
+        public string Mac { get; set; }
+
     }
 }

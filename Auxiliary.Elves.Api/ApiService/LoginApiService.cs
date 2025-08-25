@@ -3,7 +3,6 @@ using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
-using Microsoft.EntityFrameworkCore;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -16,12 +15,38 @@ namespace Auxiliary.Elves.Api.ApiService
             _dbContext = dbContext;
         }
 
+        public List<UserDto> GetAllUser(string userName, bool enabled)
+        {
+            var userDtos = new List<UserDto>(); 
+
+            if (string.IsNullOrWhiteSpace(userName))
+                return userDtos;
+
+            var userEntities = _dbContext.UserKeyEntities.Where(t => 
+              enabled ? t.Userkeylastdate != null : t.Userkeylastdate == null && t.Userid == userName).ToList();
+
+            if(!userEntities.Any())
+                return userDtos;
+
+            userDtos.AddRange(
+                userEntities.Select(x => new UserDto
+                {
+                    Userkey = x.Userkey,
+                    Userkeyid = x.Userkeyid,
+                    Userkeylastdate = x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userid = x.Userid,
+                    Isonline = x.Isonline,
+                })); 
+
+            return userDtos;
+
+        }
+
         public bool Login(AccountRequestDto accountRequest)
         {
             if (string.IsNullOrWhiteSpace(accountRequest.UserName) || string.IsNullOrWhiteSpace(accountRequest.UserKeyId) ||
-                string.IsNullOrWhiteSpace(accountRequest.Password) || string.IsNullOrWhiteSpace(accountRequest.Ip))
+                string.IsNullOrWhiteSpace(accountRequest.Password) || string.IsNullOrWhiteSpace(accountRequest.Mac))
                 return false;
-
 
             var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userid == accountRequest.UserName
                                                                         && t.Userkeyid == accountRequest.UserKeyId
@@ -38,7 +63,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 if (!userEntity.Isonline && (DateTime.Now - userEntity.UpdateTime).Hours < SystemConstant.MaxHour)
                     return false;
 
-                if (userEntity.Userkeyip != accountRequest.Ip)
+                if (userEntity.Userkeyip != accountRequest.Mac)
                     userEntity.Isonline = false;
             }
             else
@@ -47,7 +72,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 userEntity.Isonline = true;
             }
 
-            userEntity.Userkeyip = accountRequest.Ip;
+            userEntity.Userkeyip = accountRequest.Mac;
             _dbContext.UserKeyEntities.Update(userEntity);
 
             var result = _dbContext.SaveChanges();

@@ -51,5 +51,19 @@ namespace Auxiliary.Elves.Server.Controllers
         {
             return LoginApiService.RegisterKey(userId,verCode);
         }
+
+        /// <summary>
+        /// 根据账号查询卡密信息
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="enabled">是否启用</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserRoute)]
+        public List<UserDto> GetAllUser(string userName,bool enabled)
+        {
+            return LoginApiService.GetAllUser(userName, enabled);
+        }
+
     }
 }
