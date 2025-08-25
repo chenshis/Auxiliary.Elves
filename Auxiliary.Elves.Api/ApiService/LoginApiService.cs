@@ -83,6 +83,21 @@ namespace Auxiliary.Elves.Api.ApiService
             return userEntity.Isonline;
         }
 
+        public string RecoverAccount(string userId, string verCode)
+        {
+            var isAuthenticator = GoogleAuthenticatorHelper.VerifyTotpCode(userId, verCode);
+
+            if (!isAuthenticator)
+                return "";
+
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userid == userId);
+
+            if (userEntity == null)
+                return "";
+
+            return userEntity.Username;
+        }
+
         public string Register(string userFeatureCode)
         {
             if (string.IsNullOrWhiteSpace(userFeatureCode))

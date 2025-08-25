@@ -7,7 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{C44BF6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1.solution items", "1.solution items", "{DEE1106E-1D79-413B-945A-7A9BFC9EC864}"
 	ProjectSection(SolutionItems) = preProject
-		ClientSetup.iss = ClientSetup.iss
 		common.props = common.props
 		publish.bat = publish.bat
 	EndProjectSection
@@ -20,20 +19,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4.Api", "4.Api", "{45DA30D2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{B6C9E2EF-6944-4F47-8102-09F1F2C6AE0B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auxiliary.Elves.Client", "Auxiliary.Elves.Client\Auxiliary.Elves.Client.csproj", "{37ED9A88-80BC-4EC6-B8CE-BBBDF6FF783A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxiliary.Elves.Client", "Auxiliary.Elves.Client\Auxiliary.Elves.Client.csproj", "{37ED9A88-80BC-4EC6-B8CE-BBBDF6FF783A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auxiliary.Elves.Api", "Auxiliary.Elves.Api\Auxiliary.Elves.Api.csproj", "{987DE244-7166-43A9-A7B8-4C4679844119}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxiliary.Elves.Api", "Auxiliary.Elves.Api\Auxiliary.Elves.Api.csproj", "{987DE244-7166-43A9-A7B8-4C4679844119}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auxiliary.Elves.Infrastructure.Config", "Auxiliary.Elves.Infrastructure.Config\Auxiliary.Elves.Infrastructure.Config.csproj", "{F6192BA3-51F9-42CE-9C83-0F0D3B8976B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxiliary.Elves.Infrastructure.Config", "Auxiliary.Elves.Infrastructure.Config\Auxiliary.Elves.Infrastructure.Config.csproj", "{F6192BA3-51F9-42CE-9C83-0F0D3B8976B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auxiliary.Elves.Domain", "Auxiliary.Elves.Domain\Auxiliary.Elves.Domain.csproj", "{7394B655-D096-4F2D-B6D1-0CBBC6EC24B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxiliary.Elves.Domain", "Auxiliary.Elves.Domain\Auxiliary.Elves.Domain.csproj", "{7394B655-D096-4F2D-B6D1-0CBBC6EC24B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auxiliary.Elves.Server", "Auxiliary.Elves.Server\Auxiliary.Elves.Server.csproj", "{0266A034-9808-4632-B1B3-630F9DE95824}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Auxiliary.Elves.Server", "Auxiliary.Elves.Server\Auxiliary.Elves.Server.csproj", "{0266A034-9808-4632-B1B3-630F9DE95824}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5.Database", "5.Database", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
+		sys_announcement.sql = sys_announcement.sql
+		sys_systemsetting.sql = sys_systemsetting.sql
 		scripts\sys_user.sql = scripts\sys_user.sql
 		scripts\sys_userkey.sql = scripts\sys_userkey.sql
+		sys_userpoints.sql = sys_userpoints.sql
+		sys_userpointsrecord.sql = sys_userpointsrecord.sql
 	EndProjectSection
 EndProject
 Global

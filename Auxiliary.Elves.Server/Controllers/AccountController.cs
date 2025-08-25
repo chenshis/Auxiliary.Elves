@@ -23,7 +23,6 @@ namespace Auxiliary.Elves.Server.Controllers
         [Route(SystemConstant.LoginRoute)]
         public bool Login([FromBody] AccountRequestDto accountRequest)
         {
-             
             return LoginApiService.Login(accountRequest);
         }
 
@@ -65,5 +64,18 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.GetAllUser(userName, enabled);
         }
 
+        /// <summary>
+        /// 找回账号
+        /// </summary>
+        /// <param name="userId">谷歌秘钥</param>
+        /// <param name="verCode">验证码</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.RecoverRoute)]
+
+        public string RecoverAccount(string userId, string verCode) 
+        {
+            return LoginApiService.RecoverAccount(userId,verCode);
+        }
     }
 }

@@ -12,7 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString(SystemConstant.DefaultConnection);
 
 builder.Services.AddScoped<ILoginApiService, LoginApiService>();
-
+builder.Services.AddScoped<IPointsApiService, PointsApiService>();
+builder.Services.AddScoped<IAnnouncementApiService, AnnouncementApiService>();
+builder.Services.AddScoped<ISystemSettingApiService, SystemSettingApiService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>

@@ -13,8 +13,48 @@ namespace Auxiliary.Elves.Infrastructure.Config
     {
         public const int MaxDay = 30;
         public const int MaxHour = 24;
+        public const int MaxPoints = 1;
+
 
         public const int Zero = 0;
+
+        /// <summary>
+        /// 查询参数
+        /// </summary>
+        public const string SystemSettingRoute = "v1/auxiliary/systemsettings/querysystemsetting";  
+        /// <summary>
+        /// 设置参数
+        /// </summary>
+        public const string SetSystemSettingRoute= "v1/auxiliary/systemsettings/setsystemsetting";
+        /// <summary>
+        /// 查询公告
+        /// </summary>
+        public const string AnnouncementRoute = "v1/auxiliary/announcement/queryannouncement";  
+        /// <summary>
+        /// 删除公告
+        /// </summary>
+        public const string DelAnnouncementRoute = "v1/auxiliary/announcement/delannouncement";
+        /// <summary>
+        /// 新增公告
+        /// </summary>
+        public const string AddAnnouncementRoute = "v1/auxiliary/announcement/addannouncement"; 
+        /// <summary>
+        /// 查询提取记录
+        /// </summary>
+        public const string UserPointsRecord = "v1/auxiliary/points/userpointsrecord";
+        /// <summary>
+        /// 提取积分
+        /// </summary>
+        public const string ExtractRoute= "v1/auxiliary/points/extract";   
+        /// <summary>
+        /// 获取积分
+        /// </summary>
+        public const string PointsRoute= "v1/auxiliary/points/querypoints";
+
+        /// <summary>
+        /// 新增积分
+        /// </summary>
+        public const string AddPointsRoute = "v1/auxiliary/points/addpoints";
 
         /// <summary>
         /// 登录路由
@@ -35,6 +75,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 用户信息
         /// </summary>
         public const string UserRoute = "v1/auxiliary/account/queryuser";
+
+        /// <summary>
+        /// 找回账号
+        /// </summary>
+        public const string RecoverRoute = "v1/auxiliary/account/recover";
 
         /// <summary>
         /// 默认连接

@@ -39,5 +39,12 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="userName">用户名</param>
         /// <returns></returns>
         List<UserDto> GetAllUser(string userName, bool enabled);
+
+        /// <summary>
+        /// 通过谷歌账号找回账号
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        string RecoverAccount(string userId, string verCode);
     }
 }
