@@ -9,14 +9,10 @@ namespace Auxiliary.Elves.Server.Controllers
     {
         public ILoginApiService LoginApiService { get; }
 
-       
-
         public AccountController(ILoginApiService loginApiService)
         {
             LoginApiService = loginApiService;
         }
-
-        
 
         /// <summary>
         /// 登录
@@ -37,7 +33,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterRoute)]
-        public string Register([FromBody] string userFeatureCode)
+        public AccountUserDto Register([FromBody] string userFeatureCode)
         {
             return LoginApiService.Register(userFeatureCode);
         }

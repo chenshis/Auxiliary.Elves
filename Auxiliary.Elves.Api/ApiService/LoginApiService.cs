@@ -48,7 +48,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     Userkey = x.Userkey,
                     Userkeyid = x.Userkeyid,
-                    Userkeylastdate = x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userkeylastdate = x.Userkeylastdate!=null? x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"):"",
                     Userid = x.Userid,
                     Isonline = x.Isonline,
                 })); 
@@ -138,15 +138,15 @@ namespace Auxiliary.Elves.Api.ApiService
             return userEntity.Username;
         }
 
-        public string Register(string userFeatureCode)
+        public AccountUserDto Register(string userFeatureCode)
         {
             if (string.IsNullOrWhiteSpace(userFeatureCode))
-                return "";
+                return new AccountUserDto();
 
             var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userfeaturecode == userFeatureCode);
 
             if (userEntity != null)
-                return "";
+                return new AccountUserDto();
 
             Random _rnd = new Random();
             HashSet<string> _used = new HashSet<string>();
@@ -159,13 +159,13 @@ namespace Auxiliary.Elves.Api.ApiService
 
             foreach (var item in _dbContext.UserEntities.ToList())
             {
-                _used.Add(item.Userfeaturecode);
+                _used.Add(item.Username);
                 _usedNumber.Add(item.Userbakckupnumber);
             }
 
             do
             {
-                userName = _rnd.Next(100000000, 100000000).ToString(); // 8位数
+                userName = _rnd.Next(10000000, 100000000).ToString(); // 8位数
             } while (!_used.Add(userName)); // HashSet 保证唯一
 
             do
@@ -181,7 +181,9 @@ namespace Auxiliary.Elves.Api.ApiService
             _dbContext.UserEntities.Add(user);
 
             var result = _dbContext.SaveChanges();
-            return result > SystemConstant.Zero ? user.Userid : "";
+            return result > SystemConstant.Zero ? new AccountUserDto() {
+                Userid=user.Userid,
+                UserName=userName} : new AccountUserDto();
         }
 
         public bool RegisterKey(string userId, string verCode)
