@@ -43,6 +43,8 @@ namespace Auxiliary.Elves.Client
                     });
                 });
             }
+            // httpclient帮助类注册
+            containerRegistry.RegisterSingleton<AuxElvesHttpClient>();
         }
     }
 

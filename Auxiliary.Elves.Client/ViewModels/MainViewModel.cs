@@ -163,20 +163,6 @@ namespace Auxiliary.Elves.Client.ViewModels
                 SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
             }
             HasData = true;
-            for (int i = 0; i < 2; i++)
-            {
-                var account = new AccountModel()
-                {
-                    Id = i + 1,
-                    AccountId = $"Test{i + 1}",
-                    BindAccount = new Random().Next(100000, 99999999).ToString(),
-                    ExpireTime = DateTime.Now.AddDays(30 - i),
-                    Status = true
-                };
-                Accounts.Add(account);
-                SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
-            }
-            HasData = true;
         }
 
         public ICommand ToggleCommand
