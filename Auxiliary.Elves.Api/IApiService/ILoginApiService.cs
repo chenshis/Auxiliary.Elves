@@ -23,7 +23,7 @@ namespace Auxiliary.Elves.Api.IApiService
         /// </summary>
         /// <param name="userFeatureCode">特征码</param>
         /// <returns></returns>
-        string Register(string userFeatureCode);
+        AccountUserDto Register(string userFeatureCode);
 
         /// <summary>
         /// 生成卡密

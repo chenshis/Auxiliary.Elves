@@ -48,7 +48,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("download")]
-        public async Task<IActionResult> Download()
+        public async Task<IActionResult> Download(string mac)
         {
             var uploadPath = Path.Combine("Video", "Uploads");
 
