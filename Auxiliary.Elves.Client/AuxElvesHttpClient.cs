@@ -16,11 +16,11 @@ namespace Auxiliary.Elves.Client
         private readonly ILogger _logger;
         private readonly HttpClient _httpClient;
 
-        public AuxElvesHttpClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public AuxElvesHttpClient(ILogger<AuxElvesHttpClient> logger, IHttpClientFactory httpClientFactory)
         {
-            this._logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this._logger = logger;
             this._httpClient = httpClientFactory.CreateClient(nameof(AuxElvesHttpClient));
-            this._httpClient.BaseAddress = new Uri(configuration[SystemConstant.ServerUrl]);
+            this._httpClient.BaseAddress = new Uri(SystemConstant.ServerUrl);
         }
 
         //public AuxElvesHttpClient SetToken(string token)
@@ -28,6 +28,26 @@ namespace Auxiliary.Elves.Client
         //    this._httpClient.SetBearerToken(token);
         //    return this;
         //}
+        public async Task<ApiResponse<TData>> GetAsync<TData>(string route)
+        {
+            try
+            {
+                HttpResponseMessage responseMessage = await _httpClient.GetAsync(route);
+                var responseResult = GetResponseCodeResult<TData>(responseMessage);
+                return responseResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Get请求异常：{ex.Message}");
+                var apiResponse = new ApiResponse<TData>();
+                apiResponse.Code = 1;
+                apiResponse.Msg = ex.Message;
+                apiResponse.Data = default(TData);
+                apiResponse.ServerTime = DateTime.Now.Ticks;
+                return apiResponse;
+            }
+        }
+
 
         public ApiResponse<TData> Get<TData>(string route)
         {
@@ -67,12 +87,12 @@ namespace Auxiliary.Elves.Client
         }
 
 
-        public ApiResponse<TData> Post<TData>(string route)
+        public async Task<ApiResponse<TData>> PostAsync<TData>(string route)
         {
-            return Post<int, TData>(route, 0);
+            return await PostAsync<int, TData>(route, 0);
         }
 
-        public ApiResponse<TData> Post<TRequest, TData>(string route, TRequest request)
+        public async Task<ApiResponse<TData>> PostAsync<TRequest, TData>(string route, TRequest request)
         {
             StringContent stringContent = null;
             if (request != null)
@@ -81,25 +101,8 @@ namespace Auxiliary.Elves.Client
             }
             try
             {
-                HttpResponseMessage responseMessage = _httpClient.PostAsync(route, stringContent).Result;
+                HttpResponseMessage responseMessage = await _httpClient.PostAsync(route, stringContent);
                 var responseResult = GetResponseCodeResult<TData>(responseMessage);
-                // 未授权 但是有token 则刷新token
-                if (responseResult.Code == (int)System.Net.HttpStatusCode.Unauthorized)
-                {
-                    var refreshResponse = RefreshToken();
-                    if (refreshResponse.Code != 0)
-                    {
-                        _logger.LogError($"Post请求异常：{refreshResponse.Msg}");
-                        return responseResult;
-                    }
-                    responseMessage = _httpClient.PostAsync(route, stringContent).Result;
-                    responseResult = GetResponseCodeResult<TData>(responseMessage);
-                    if (responseResult.Code != 0)
-                    {
-                        _logger.LogError($"Post请求异常：{responseResult.Msg}");
-                        responseResult.Code = 1;
-                    }
-                }
                 return responseResult;
             }
             catch (Exception ex)
@@ -176,9 +179,7 @@ namespace Auxiliary.Elves.Client
                 try
                 {
                     var stringResult = responseMessage.Content.ReadAsStringAsync().Result;
-                    apiResponse.Code = 0;
-                    apiResponse.Data = JsonConvert.DeserializeObject<TData>(stringResult);
-                    apiResponse.ServerTime = DateTime.Now.Ticks;
+                    apiResponse = JsonConvert.DeserializeObject<ApiResponse<TData>>(stringResult);
                 }
                 catch (Exception ex)
                 {

@@ -15,6 +15,9 @@ using System.Windows.Input;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel;
+using System.Net.Http;
+using Auxiliary.Elves.Api.Dtos;
+using System.Security.Principal;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -40,29 +43,42 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
         }
 
+        private string _announcement;
+        public string Announcement
+        {
+            get
+            {
+                return _announcement;
+            }
+            set
+            {
+                SetProperty(ref _announcement, value);
+            }
+        }
+
         private IWebHost _webHost;
         private int _port = 9527;
         private readonly IWindowService _windowService;
         private readonly IDialogService _dialogService;
         private readonly ILogger<MainViewModel> _logger;
+        private readonly AuxElvesHttpClient _httpClient;
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
         private Dictionary<AccountModel, SessionView> SessionViews { get; set; }
 
         public MainViewModel(IWindowService windowService, IDialogService dialogService,
-            ILogger<MainViewModel> logger)
+            ILogger<MainViewModel> logger, AuxElvesHttpClient httpClient)
         {
             this._windowService = windowService;
             this._dialogService = dialogService;
             this._logger = logger;
+            this._httpClient = httpClient;
             Accounts = new ObservableCollection<AccountModel>();
             SessionViews = new Dictionary<AccountModel, SessionView>();
-            StartHost();
-            DataQuery();
         }
 
-        private void StartHost()
+        private async Task StartHost()
         {
             try
             {
@@ -121,7 +137,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                     .Build();
 
                 // 启动主机
-                _webHost.Start();
+                await _webHost.StartAsync();
             }
             catch (Exception ex)
             {
@@ -145,24 +161,68 @@ namespace Auxiliary.Elves.Client.ViewModels
         }
 
         /// <summary>
-        /// 初始化
+        /// 数据擦汗寻
         /// </summary>
-        private void DataQuery()
+        private async Task DataQuery()
         {
-            for (int i = 0; i < 2; i++)
+            string mac = _logger.GetMac();
+            if (mac == null)
             {
+                return;
+            }
+            var apiResponse = await _httpClient.PostAsync<List<UserDto>>(
+                 string.Concat(SystemConstant.UserMacRoute, $"?mac={mac}"));
+            if (apiResponse == null)
+            {
+                _logger.LogError($"用户列表无响应");
+                return;
+            }
+            if (apiResponse.Code == 1 || apiResponse.Data == null)
+            {
+                _logger.LogError("用户列表服务异常");
+                return;
+            }
+
+            foreach (var item in apiResponse.Data)
+            {
+                var filterData = Accounts
+                    .Where(t => t.AccountId == item.Userid && t.BindAccount == item.Userkey)
+                    .Count();
+                if (filterData > 0)
+                {
+                    continue;
+                }
                 var account = new AccountModel()
                 {
-                    Id = i + 1,
-                    AccountId = $"Test{i + 1}",
-                    BindAccount = new Random().Next(100000, 99999999).ToString(),
-                    ExpireTime = DateTime.Now.AddDays(30 - i),
+                    AccountId = item.Userid,
+                    BindAccount = item.Userkeyid,
+                    ExpireTime = DateTime.Now.AddDays(30),
                     Status = true
                 };
                 Accounts.Add(account);
                 SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
+
             }
-            HasData = true;
+            if (Accounts != null && Accounts.Count > 0)
+            {
+                HasData = true;
+            }
+        }
+
+        private async Task GetAnnouncement()
+        {
+            var apiResponse = await _httpClient.PostAsync<List<AnnouncementDto>>(SystemConstant.AnnouncementRoute);
+            if (apiResponse == null)
+            {
+                _logger.LogError($"公告无响应");
+                return;
+            }
+            if (apiResponse.Code == 1 || apiResponse.Data == null)
+            {
+                _logger.LogError("公告获取服务异常");
+                return;
+            }
+            Announcement = string.Join("         ", apiResponse.Data.Select(t => t.Announcement));
         }
 
         public ICommand ToggleCommand
@@ -253,14 +313,14 @@ namespace Auxiliary.Elves.Client.ViewModels
         {
             IsEnable = false;
             _dialogService.ShowDialog(
-                nameof(AddUserDialogView),
-                result =>
-                {
-                    if (result.Result == ButtonResult.OK)
-                    {
-                        DataQuery();
-                    }
-                });
+                 nameof(AddUserDialogView),
+                 async result =>
+                 {
+                     if (result.Result == ButtonResult.OK)
+                     {
+                         await DataQuery();
+                     }
+                 });
 
             IsEnable = true;
         }
@@ -304,5 +364,16 @@ namespace Auxiliary.Elves.Client.ViewModels
 
             });
         }
+
+        public ICommand OnLoadedCommand
+        {
+            get => new DelegateCommand(async () =>
+            {
+                await GetAnnouncement();
+                await StartHost();
+                await DataQuery();
+            });
+        }
+
     }
 }
