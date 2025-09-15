@@ -104,5 +104,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 宿主地址列表
         /// </summary>
         public const string HostPort = "HostPort";
+
+        public const string ServerUrl = "http://47.238.158.162/";
+
+        public const string Unauthorized = "权限认证失败";
+
+        public const string RefreshTokenRoute = "";
     }
 }
