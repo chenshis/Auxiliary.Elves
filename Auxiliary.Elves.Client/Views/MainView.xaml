@@ -20,6 +20,7 @@
     SnapsToDevicePixels="True" 
     UseLayoutRounding="True"
     Icon="../Assets/logo.ico"
+    hc:Growl.GrowlParent="True"
     mc:Ignorable="d">
     <Window.Resources>
         <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockBaseStyle}">

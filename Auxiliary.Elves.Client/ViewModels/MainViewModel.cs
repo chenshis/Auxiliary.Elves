@@ -10,7 +10,6 @@ using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Input;
 using System.IO;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +17,7 @@ using System.ComponentModel;
 using System.Net.Http;
 using Auxiliary.Elves.Api.Dtos;
 using System.Security.Principal;
+using HandyControl.Controls;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -215,11 +215,13 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (apiResponse == null)
             {
                 _logger.LogError($"公告无响应");
+                Growl.Warning("获取公告失败，服务无响应");
                 return;
             }
             if (apiResponse.Code == 1 || apiResponse.Data == null)
             {
                 _logger.LogError("公告获取服务异常");
+                Growl.Warning("请检查网络连接是否正常");
                 return;
             }
             Announcement = string.Join("；", apiResponse.Data.Select(t => t.Announcement));
@@ -255,11 +257,13 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (apiResponse == null)
             {
                 _logger.LogError($"删除账号无响应");
+                Growl.Warning("删除账号失败，网络无响应");
                 return;
             }
             if (apiResponse.Code == 1 || apiResponse?.Data == null)
             {
                 _logger.LogError("删除账户服务异常");
+                Growl.Warning("请检查网络连接是否正常");
                 return;
             }
             SessionViews[m].Close();
@@ -279,7 +283,7 @@ namespace Auxiliary.Elves.Client.ViewModels
         private void SetArrangeKeys()
         {
             // 获取主屏幕的工作区域（排除任务栏）
-            var workingArea = SystemParameters.WorkArea;
+            var workingArea = System.Windows.SystemParameters.WorkArea;
 
             // 计算网格布局
             int columns = (int)Math.Floor(workingArea.Width / 328);
@@ -309,7 +313,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
                 item.Value.Left = left;
                 item.Value.Top = top;
-                item.Value.WindowState = WindowState.Normal;
+                item.Value.WindowState = System.Windows.WindowState.Normal;
 
 
                 i++;
