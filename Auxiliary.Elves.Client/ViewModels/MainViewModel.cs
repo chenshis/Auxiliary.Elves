@@ -196,7 +196,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 {
                     AccountId = item.Userid,
                     BindAccount = item.Userkeyid,
-                    ExpireTime = DateTime.Now.AddDays(30),
+                    ExpireTime = item.ExpireDate,
                     Status = true
                 };
                 Accounts.Add(account);
@@ -222,7 +222,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 _logger.LogError("公告获取服务异常");
                 return;
             }
-            Announcement = string.Join("         ", apiResponse.Data.Select(t => t.Announcement));
+            Announcement = string.Join("；", apiResponse.Data.Select(t => t.Announcement));
         }
 
         public ICommand ToggleCommand
@@ -245,11 +245,23 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public ICommand DeleteCommand
         {
-            get => new DelegateCommand<AccountModel>((m) => Delete(m));
+            get => new DelegateCommand<AccountModel>(async (m) => await Delete(m));
         }
 
-        private void Delete(AccountModel m)
+        private async Task Delete(AccountModel m)
         {
+            var apiResponse = await _httpClient.PostAsync<bool>(
+                  string.Concat(SystemConstant.DelUserRoute, $"?userkeyidserId={m.BindAccount}"));
+            if (apiResponse == null)
+            {
+                _logger.LogError($"删除账号无响应");
+                return;
+            }
+            if (apiResponse.Code == 1 || apiResponse?.Data == null)
+            {
+                _logger.LogError("删除账户服务异常");
+                return;
+            }
             SessionViews[m].Close();
             SessionViews.Remove(m);
             Accounts.Remove(m);

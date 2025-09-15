@@ -12,15 +12,24 @@ namespace Auxiliary.Elves.Client.ViewModels
 {
     public class SessionViewModel : BindableBase, IParameterReceiver
     {
-        public readonly ILogger<SessionViewModel> _logger;
+        public readonly ILogger<SessionViewModel> Logger;
+        public AccountModel Account { get; set; }
 
         public SessionViewModel(ILogger<SessionViewModel> logger)
         {
-            this._logger = logger;
+            this.Logger = logger;
         }
 
-        public void ApplyParameters<AccountModel>(AccountModel parameter)
+        public void ApplyParameters<Model>(Model parameter)
         {
+            if (parameter == null)
+            {
+                return;
+            }
+            if (parameter is AccountModel account)
+            {
+                Account = account;
+            }
         }
     }
 }

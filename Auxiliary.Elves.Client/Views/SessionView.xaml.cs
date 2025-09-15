@@ -28,6 +28,9 @@ namespace Auxiliary.Elves.Client.Views
             var model = this.DataContext as SessionViewModel;
             try
             {
+                model.Logger.LogInformation($"绑定账号：{model.Account.BindAccount}初始换窗口");
+
+                this.Title = model.Account.BindAccount;
                 string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
                 if (!Directory.Exists(userDataFolder))
                 {
@@ -46,7 +49,7 @@ namespace Auxiliary.Elves.Client.Views
             }
             catch (Exception ex)
             {
-                model._logger.LogError(ex, "WebView2 initialization failed");
+                model.Logger.LogError(ex, "WebView2 initialization failed");
 
                 // 提供用户友好的错误信息
                 if (ex.Message.Contains("runtime") || ex.Message.Contains("not installed"))
@@ -165,24 +168,6 @@ namespace Auxiliary.Elves.Client.Views
             object-fit: contain;
         }
         
-        .overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            padding: 20px;
-            color: white;
-            z-index: 50;
-        }
-        
-        .overlay-text {
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-        }
-        
         .settlement-screen {
             position: absolute;
             top: 0;
@@ -230,11 +215,6 @@ namespace Auxiliary.Elves.Client.Views
     <div class=""container"">
         <div class=""video-container"">
             <video id=""videoPlayer"" controls></video>
-            
-            <div class=""overlay"">
-                <div class=""overlay-text"" id=""bottomText"">视频播放中...</div>
-            </div>
-            
             <div class=""settlement-screen"" id=""settlementScreen"">
                 <div class=""loading-spinner""></div>
                 <div class=""settlement-text"">结算任务执行中，请稍候...</div>
@@ -245,7 +225,6 @@ namespace Auxiliary.Elves.Client.Views
 
     <script>
         let videoElement = document.getElementById('videoPlayer');
-        let bottomText = document.getElementById('bottomText');
         let settlementScreen = document.getElementById('settlementScreen');
         let successMessage = document.getElementById('successMessage');
         
@@ -283,7 +262,6 @@ namespace Auxiliary.Elves.Client.Views
             
             currentVideoIndex = index;
             videoElement.src = videoList[index];
-            bottomText.textContent = `正在播放: 视频 ${index + 1}/${videoList.length}`;
             
             videoElement.onloadeddata = () => {
                 videoElement.play();

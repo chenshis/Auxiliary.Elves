@@ -128,7 +128,7 @@
 
                                         <TextBlock Text="{Binding AccountId}" Grid.Column="0" Style="{StaticResource tbItem}"/>
                                         <TextBlock Text="{Binding BindAccount}" Grid.Column="1" Style="{StaticResource tbItem}"/>
-                                        <TextBlock Text="{Binding ExpireTime, StringFormat=yyyy/MM/dd HH:mm:ss}" Grid.Column="2" Style="{StaticResource tbItem}"/>
+                                        <TextBlock Text="{Binding ExpireTime}" Grid.Column="2" Style="{StaticResource tbItem}"/>
                                         <TextBlock  Grid.Column="3">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource tbItem}">

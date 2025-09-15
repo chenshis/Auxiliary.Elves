@@ -11,7 +11,7 @@ namespace Auxiliary.Elves.Client.Models
     {
         public string AccountId { get; set; }
         public string BindAccount { get; set; }
-        public DateTime? ExpireTime { get; set; }
+        public string ExpireTime { get; set; }
 
         private bool _status = false;
 

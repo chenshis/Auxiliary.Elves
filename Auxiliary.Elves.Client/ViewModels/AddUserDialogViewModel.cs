@@ -1,4 +1,5 @@
-﻿using Auxiliary.Elves.Infrastructure.Config;
+﻿using Auxiliary.Elves.Api.Dtos;
+using Auxiliary.Elves.Infrastructure.Config;
 using HandyControl.Controls;
 using Microsoft.Extensions.Logging;
 using Prism.Commands;
@@ -134,9 +135,13 @@ namespace Auxiliary.Elves.Client.ViewModels
         }
 
 
-        public ICommand ConfirmCommand { get => new DelegateCommand<UserControl>((u => SetAddUserActive(u))).ObservesCanExecute(() => IsEnable); }
+        public ICommand ConfirmCommand
+        {
+            get => new DelegateCommand<UserControl>
+                (async u => await SetAddUserActive(u)).ObservesCanExecute(() => IsEnable);
+        }
 
-        private void SetAddUserActive(UserControl control)
+        private async Task SetAddUserActive(UserControl control)
         {
             IsEnable = false;
             HandyControl.Controls.PasswordBox userPwd = null;
@@ -146,26 +151,55 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (string.IsNullOrWhiteSpace(UserName))
             {
                 ErrorMessage = "请输入账号";
-                Growl.Error(ErrorMessage, "ErrorMsg");
                 IsEnable = true;
                 return;
             }
             if (string.IsNullOrWhiteSpace(Password))
             {
                 ErrorMessage = "请输入密码";
-                Growl.Error(ErrorMessage, "ErrorMsg");
                 IsEnable = true;
                 return;
             }
             if (string.IsNullOrWhiteSpace(Contacts))
             {
                 ErrorMessage = "请输入绑定账号";
-                Growl.Error(ErrorMessage, "ErrorMsg");
                 IsEnable = true;
                 return;
             }
-
-
+            var mac = _logger.GetMac();
+            if (mac == null)
+            {
+                ErrorMessage = "获取mac地址失败";
+                IsEnable = true;
+                return;
+            }
+            var apiResponse = await _httpClient.PostAsync<AccountRequestDto, bool>(SystemConstant.LoginRoute, new AccountRequestDto
+            {
+                UserName = UserName,
+                Password = Password,
+                UserKeyId = Contacts,
+                Mac = mac
+            });
+            if (apiResponse == null)
+            {
+                _logger.LogError($"添加账户无响应");
+                ErrorMessage = "添加账户无响应";
+                IsEnable = true;
+                return;
+            }
+            if (apiResponse.Code == 1 || apiResponse?.Data == null)
+            {
+                _logger.LogError("添加账户服务异常");
+                ErrorMessage = "请检查网络连接是否正常";
+                IsEnable = true;
+                return;
+            }
+            if (apiResponse.Data == false)
+            {
+                ErrorMessage = "请检查输入账户信息是否合法";
+                IsEnable = true;
+                return;
+            }
 
             CloseCommand.Execute(ButtonResult.OK);
         }
