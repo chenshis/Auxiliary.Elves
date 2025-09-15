@@ -32,5 +32,10 @@ namespace Auxiliary.Elves.Api.Dtos
         /// 是否在线,;
         /// </summary>
         public bool Isonline { get; set; }
+
+        /// <summary>
+        /// 到期时间
+        /// </summary>
+        public string ExpireDate { get; set; }
     }
 }
