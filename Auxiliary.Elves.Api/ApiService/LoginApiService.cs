@@ -43,15 +43,28 @@ namespace Auxiliary.Elves.Api.ApiService
             if(!userEntities.Any())
                 return userDtos;
 
-            userDtos.AddRange(
-                userEntities.Select(x => new UserDto
+
+            foreach (var user in userEntities)
+            {
+                var userInfo = new UserDto
                 {
-                    Userkey = x.Userkey,
-                    Userkeyid = x.Userkeyid,
-                    Userkeylastdate = x.Userkeylastdate!=null? x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"):"",
-                    Userid = x.Userid,
-                    Isonline = x.Isonline,
-                })); 
+                    Userkey = user.Userkey,
+                    Userkeyid = user.Userkeyid,
+                    Userkeylastdate = user.Userkeylastdate!=null? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"):"",
+                    Userid = user.Userid,
+                    Isonline = user.Isonline
+                };
+
+                if (user.Isonline)
+                {
+                    if (!string.IsNullOrWhiteSpace(user.Userkeyip))
+                    {
+                        DateTime expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
+                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                }
+                userDtos.Add(userInfo);
+            }
 
             return userDtos;
 
@@ -69,16 +82,35 @@ namespace Auxiliary.Elves.Api.ApiService
             if (!userEntities.Any())
                 return userDtos;
 
-            userDtos.AddRange(
-                userEntities.Select(x => new UserDto
+            foreach (var user in userEntities)
+            {
+                var userInfo = new UserDto 
                 {
-                    Userkey = x.Userkey,
-                    Userkeyid = x.Userkeyid,
-                    Userkeylastdate = x.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
-                    Userid = x.Userid,
-                    Isonline = x.Isonline,
-                }));
+                    Userkey = user.Userkey,
+                    Userkeyid = user.Userkeyid,
+                    Userkeylastdate = user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userid = user.Userid,
+                    Isonline = user.Isonline,
+                };
 
+                if (user.Isonline)
+                {
+                    if (!string.IsNullOrWhiteSpace(user.Userkeyip))
+                    {
+
+                   
+                        DateTime expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
+
+                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    }
+                }
+               
+
+                userDtos.Add(userInfo);
+            }
+
+          
             return userDtos;
         }
 
