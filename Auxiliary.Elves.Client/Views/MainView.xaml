@@ -58,10 +58,15 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Loaded">
+                <i:InvokeCommandAction Command="{Binding OnLoadedCommand}" />
+            </i:EventTrigger>
+        </i:Interaction.Triggers>
         <!-- 公告区域 -->
         <Border Grid.Row="0" CornerRadius="3">
-            <hc:RunningBlock Content="这里是滚动公告。。。这里是滚动公告。。。这里是滚动公告。" 
-                             Speed="50" Margin="10,5"/>
+            <hc:RunningBlock Content="{Binding Announcement}" 
+                             Speed="50" Margin="10,5" FontWeight="Bold"/>
         </Border>
         <!-- 主内容区域 -->
         <Grid Grid.Row="1">
@@ -123,7 +128,7 @@
 
                                         <TextBlock Text="{Binding AccountId}" Grid.Column="0" Style="{StaticResource tbItem}"/>
                                         <TextBlock Text="{Binding BindAccount}" Grid.Column="1" Style="{StaticResource tbItem}"/>
-                                        <TextBlock Text="{Binding ExpireTime, StringFormat=yyyy/MM/dd HH:mm:ss}" Grid.Column="2" Style="{StaticResource tbItem}"/>
+                                        <TextBlock Text="{Binding ExpireTime}" Grid.Column="2" Style="{StaticResource tbItem}"/>
                                         <TextBlock  Grid.Column="3">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource tbItem}">

@@ -9,10 +9,9 @@ namespace Auxiliary.Elves.Client.Models
 {
     public class AccountModel : BindableBase
     {
-        public int Id { get; set; }
         public string AccountId { get; set; }
         public string BindAccount { get; set; }
-        public DateTime? ExpireTime { get; set; }
+        public string ExpireTime { get; set; }
 
         private bool _status = false;
 

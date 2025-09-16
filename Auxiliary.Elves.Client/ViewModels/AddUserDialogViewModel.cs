@@ -1,5 +1,7 @@
-﻿using Auxiliary.Elves.Infrastructure.Config;
+﻿using Auxiliary.Elves.Api.Dtos;
+using Auxiliary.Elves.Infrastructure.Config;
 using HandyControl.Controls;
+using Microsoft.Extensions.Logging;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
@@ -23,6 +25,12 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public event Action<IDialogResult> RequestClose;
 
+        public AddUserDialogViewModel(AuxElvesHttpClient httpClient, ILogger<AddUserDialogViewModel> logger)
+        {
+            this._httpClient = httpClient;
+            this._logger = logger;
+        }
+
         public bool CanCloseDialog()
         {
             return true;
@@ -30,7 +38,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public void OnDialogClosed()
         {
-           
+
         }
 
         public void OnDialogOpened(IDialogParameters parameters)
@@ -114,6 +122,8 @@ namespace Auxiliary.Elves.Client.ViewModels
         }
 
         private bool _isEnable = true;
+        private readonly AuxElvesHttpClient _httpClient;
+        private readonly ILogger<AddUserDialogViewModel> _logger;
 
         /// <summary>
         /// 是否启用命令
@@ -125,18 +135,71 @@ namespace Auxiliary.Elves.Client.ViewModels
         }
 
 
-        public ICommand ConfirmCommand { get => new DelegateCommand<UserControl>((u => SetAddUserActive(u))).ObservesCanExecute(() => IsEnable); }
-
-        private void SetAddUserActive(UserControl control)
+        public ICommand ConfirmCommand
         {
-            ErrorMessage = "网络异常";
-            Growl.Error(ErrorMessage, "ErrorMsg");
-            return;
+            get => new DelegateCommand<UserControl>
+                (async u => await SetAddUserActive(u)).ObservesCanExecute(() => IsEnable);
+        }
+
+        private async Task SetAddUserActive(UserControl control)
+        {
             IsEnable = false;
             HandyControl.Controls.PasswordBox userPwd = null;
             userPwd = control.FindName(nameof(userPwd)) as HandyControl.Controls.PasswordBox;
             Password = userPwd.Password;
-
+            ErrorMessage = null;
+            if (string.IsNullOrWhiteSpace(UserName))
+            {
+                ErrorMessage = "请输入账号";
+                IsEnable = true;
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(Password))
+            {
+                ErrorMessage = "请输入密码";
+                IsEnable = true;
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(Contacts))
+            {
+                ErrorMessage = "请输入绑定账号";
+                IsEnable = true;
+                return;
+            }
+            var mac = _logger.GetMac();
+            if (mac == null)
+            {
+                ErrorMessage = "获取mac地址失败";
+                IsEnable = true;
+                return;
+            }
+            var apiResponse = await _httpClient.PostAsync<AccountRequestDto, bool>(SystemConstant.LoginRoute, new AccountRequestDto
+            {
+                UserName = UserName,
+                Password = Password,
+                UserKeyId = Contacts,
+                Mac = mac
+            });
+            if (apiResponse == null)
+            {
+                _logger.LogError($"添加账户无响应");
+                ErrorMessage = "添加账户无响应";
+                IsEnable = true;
+                return;
+            }
+            if (apiResponse.Code == 1 || apiResponse?.Data == null)
+            {
+                _logger.LogError("添加账户服务异常");
+                ErrorMessage = "请检查网络连接是否正常";
+                IsEnable = true;
+                return;
+            }
+            if (apiResponse.Data == false)
+            {
+                ErrorMessage = "请检查输入账户信息是否合法";
+                IsEnable = true;
+                return;
+            }
 
             CloseCommand.Execute(ButtonResult.OK);
         }
