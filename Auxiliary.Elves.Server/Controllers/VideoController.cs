@@ -1,15 +1,20 @@
 ﻿using Auxiliary.Elves.Api.IApiService;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
+using System.Text;
 
 namespace Auxiliary.Elves.Server.Controllers
 {
     public class VideoController : AuxiliaryControllerBase
     {
         public ILoginApiService LoginApiService { get; }
+        private readonly ILogger<VideoController> _logger;
 
-        public VideoController(ILoginApiService loginApiService)
+        public VideoController(ILoginApiService loginApiService,ILogger<VideoController> logger)
         {
             LoginApiService = loginApiService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -29,14 +34,15 @@ namespace Auxiliary.Elves.Server.Controllers
             if (!allowedExtensions.Contains(ext))
                 return false;
 
-            var rootPath = Directory.GetCurrentDirectory();
-            var uploadPath = Path.Combine("Video", "Uploads");
+            var baseDic = AppDomain.CurrentDomain.BaseDirectory;
+
+            var videoDirectory = Path.Combine(baseDic, "videos");
 
             // 确保目录存在
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
+            if (!Directory.Exists(videoDirectory))
+                Directory.CreateDirectory(videoDirectory);
 
-            var filePath = Path.Combine(uploadPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(videoDirectory, Guid.NewGuid().ToString());
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
 
@@ -50,12 +56,14 @@ namespace Auxiliary.Elves.Server.Controllers
         [HttpGet("download")]
         public async Task<IActionResult> Download(string mac)
         {
-            var uploadPath = Path.Combine("Video", "Uploads");
+            var baseDic = AppDomain.CurrentDomain.BaseDirectory;
 
-            if (!Directory.Exists(uploadPath))
+            var videoDirectory = Path.Combine(baseDic, "videos");
+
+            if (!Directory.Exists(videoDirectory))
                 return NotFound("没有可下载的视频");
 
-            var files = Directory.GetFiles(uploadPath);
+            var files = Directory.GetFiles(videoDirectory);
             if (files.Length == 0)
                 return NotFound("没有可下载的视频");
 
@@ -72,5 +80,35 @@ namespace Auxiliary.Elves.Server.Controllers
             // 返回文件
             return File(fileBytes, "application/octet-stream", fileName);
         }
+
+
+        /// <summary>
+        /// 获取视频地址
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("getVideoUrl")]
+        public async Task<string> GetVideoUrlAsync()
+        {
+            var baseDic = AppDomain.CurrentDomain.BaseDirectory;
+
+            var videoDirectory = Path.Combine(baseDic, "videos");
+
+            if (!Directory.Exists(videoDirectory))
+                return "";
+
+            var files = Directory.GetFiles(videoDirectory).Select(Path.GetFileName)
+                     .ToList();
+
+            if (!files.Any())
+                return "";
+
+            var random = new Random();
+            var index = random.Next(files.Count);
+            var randomFile = files[index]; // 随机文件名
+            return randomFile;
+            
+        }
+
+
     }
 }
