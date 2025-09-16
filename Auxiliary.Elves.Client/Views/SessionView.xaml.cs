@@ -25,12 +25,12 @@ namespace Auxiliary.Elves.Client.Views
 
         public async Task InitializeWebView2Async()
         {
-            var model = this.DataContext as SessionViewModel;
+            var viewModel = this.DataContext as SessionViewModel;
             try
             {
-                model.Logger.LogInformation($"绑定账号：{model.Account.BindAccount}初始换窗口");
+                viewModel.RecordInfo($"绑定账号：{viewModel.Account.BindAccount}初始换窗口");
 
-                this.Title = model.Account.BindAccount;
+                this.Title = viewModel.Account.BindAccount;
                 string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
                 if (!Directory.Exists(userDataFolder))
                 {
@@ -39,7 +39,7 @@ namespace Auxiliary.Elves.Client.Views
                 var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
                 await webView.EnsureCoreWebView2Async(env);
                 // 初始化WebView2
-                webView.NavigationCompleted += WebView_NavigationCompleted;
+                webView.NavigationCompleted += async (sender, e) => await WebView_NavigationCompleted(sender, e);
                 webView.WebMessageReceived += WebView_WebMessageReceived;
                 webView.Source = new Uri(System.IO.Path.GetFullPath("video_player.html"));
                 await webView.EnsureCoreWebView2Async();
@@ -49,7 +49,7 @@ namespace Auxiliary.Elves.Client.Views
             }
             catch (Exception ex)
             {
-                model.Logger.LogError(ex, "WebView2 initialization failed");
+                viewModel.RecordError(ex, "WebView2 initialization failed");
 
                 // 提供用户友好的错误信息
                 if (ex.Message.Contains("runtime") || ex.Message.Contains("not installed"))
@@ -68,17 +68,14 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private async void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        private async Task WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             var webView = sender as WebView2;
             if (webView != null && webView.CoreWebView2 != null)
             {
-                // 设置初始视频列表
-                string[] videos = {
-                    "http://localhost:9527/trailer.mp4"
-                };
-
-
+                var viewModel = this.DataContext as SessionViewModel;
+                var videoAddress = viewModel.GetVideoAddress();
+                string[] videos = { videoAddress };
                 string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
                 await webView.ExecuteScriptAsync(script);
             }
@@ -96,14 +93,17 @@ namespace Auxiliary.Elves.Client.Views
 
                 if (action == "settlementComplete")
                 {
+                    var viewModel = this.DataContext as SessionViewModel;
                     // 执行结算任务
-                    bool success = await ExecuteSettlementTask();
-
+                    await Task.Delay(2000); // 模拟耗时操作
+                    var success = await viewModel.UpdatePoints();
                     // 通知WebView结算结果
                     string resultScript = $"settlementResult({success.ToString().ToLower()});";
                     await webView?.ExecuteScriptAsync(resultScript);
                     // 设置初始视频列表
-                    string[] videos = { "http://localhost:9527/test.mp4" };
+
+                    var videoAddress = viewModel.GetVideoAddress();
+                    string[] videos = { videoAddress };
                     string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
                     await webView.ExecuteScriptAsync(script);
                 }
@@ -113,12 +113,6 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private async Task<bool> ExecuteSettlementTask()
-        {
-            // 模拟结算任务执行
-            await Task.Delay(2000); // 模拟耗时操作
-            return true; // 假设总是成功
-        }
 
         public void Start()
         {
