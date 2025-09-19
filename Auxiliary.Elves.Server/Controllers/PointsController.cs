@@ -23,9 +23,9 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.AddPointsRoute)]
-        public bool AddPoints(string userName, int points)
+        public bool AddPoints(string userName)
         {
-            return PointsApiService.AddPoints(userName, points);
+            return PointsApiService.AddPoints(userName, 1);
         }
 
         /// <summary>

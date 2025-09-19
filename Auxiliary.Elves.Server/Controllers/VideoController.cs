@@ -1,4 +1,5 @@
 ﻿using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
@@ -22,7 +23,8 @@ namespace Auxiliary.Elves.Server.Controllers
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        [HttpPost("upload")]
+        [HttpPost]
+        [Route(SystemConstant.VideoUploadRoute)]
         public async Task<bool> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -53,7 +55,8 @@ namespace Auxiliary.Elves.Server.Controllers
         /// 下载视频
         /// </summary>
         /// <returns></returns>
-        [HttpGet("download")]
+        [HttpPost]
+        [Route(SystemConstant.VideoDownloadRoute)]
         public async Task<IActionResult> Download(string mac)
         {
             var baseDic = AppDomain.CurrentDomain.BaseDirectory;
@@ -86,8 +89,9 @@ namespace Auxiliary.Elves.Server.Controllers
         /// 获取视频地址
         /// </summary>
         /// <returns></returns>
-        [HttpGet("getVideoUrl")]
-        public async Task<string> GetVideoUrlAsync()
+        [HttpPost]
+        [Route(SystemConstant.VideoVideoUrlRoute)]
+        public async Task<string> GetVideoUrl()
         {
             var baseDic = AppDomain.CurrentDomain.BaseDirectory;
 

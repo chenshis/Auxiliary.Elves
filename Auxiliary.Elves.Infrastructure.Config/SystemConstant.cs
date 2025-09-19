@@ -19,6 +19,21 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const int Zero = 0;
 
         /// <summary>
+        /// 上传视频
+        /// </summary>
+        public const string VideoUploadRoute = "v1/auxiliary/video/videoupload";
+
+        /// <summary>
+        /// 下载视频
+        /// </summary>
+        public const string VideoDownloadRoute = "v1/auxiliary/video/videodownload";
+
+        /// <summary>
+        /// 获取视频地址
+        /// </summary>
+        public const string VideoVideoUrlRoute = "v1/auxiliary/video/getvideourl";
+
+        /// <summary>
         /// 查询参数
         /// </summary>
         public const string SystemSettingRoute = "v1/auxiliary/systemsettings/querysystemsetting";  

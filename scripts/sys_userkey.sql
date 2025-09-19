@@ -6,7 +6,7 @@ CREATE TABLE sys_userkey(
     `UserId` VARCHAR(50) NOT NULL COMMENT '账号唯一编码',
     `UserkeyId` VARCHAR(50) NOT NULL COMMENT '卡密唯一编码',
     `UserKey` VARCHAR(50) NOT NULL COMMENT '卡密',
-    `UserKeyIp` VARCHAR(20) COMMENT '卡密绑定IP',
+    `UserKeyIp` VARCHAR(200) COMMENT '卡密绑定IP',
     `UserKeyBindAccount` VARCHAR(100) COMMENT '绑定谷歌账号',
     `UserkeyLastDate` DATETIME COMMENT '最后登录日期',
     `IsOnline` BOOLEAN COMMENT '是否在线',
