@@ -1,4 +1,6 @@
 ﻿using Auxiliary.Elves.Client.Models;
+using Auxiliary.Elves.Infrastructure.Config;
+using HandyControl.Controls;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
@@ -46,19 +48,35 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
         }
 
-        public string GetVideoAddress()
+        public async Task<string> GetVideoAddressAsync()
         {
-            return "https://media.w3.org/2010/05/sintel/trailer.mp4";
+            _logger.LogInformation($"{Account.BindAccount}:拉取视频");
+            var apiResponse = await _httpClient.PostAsync<string>(SystemConstant.VideoVideoUrlRoute);
+            if (apiResponse == null)
+            {
+                return await Task.FromResult<string>(null);
+            }
+            if (apiResponse.Code == 1 || apiResponse.Data == null)
+            {
+                _logger.LogError($"{Account.BindAccount}:拉取视频服务异常");
+                return await Task.FromResult<string>(null);
+            }
+            return string.Concat(SystemConstant.ServerUrl, apiResponse.Data);
         }
 
         public async Task<bool> UpdatePoints()
         {
+
             var userName = Account.AccountId;
+            var apiResponse = await _httpClient.PostAsync<bool>(string.Concat(SystemConstant.AddPointsRoute, $"?userName={userName}"));
 
-
-
-
-            return await Task.Run(() => true);
+            if (apiResponse?.Data == false)
+            {
+                _logger.LogError($"{Account.BindAccount}:更新积分失败");
+                return false;
+            }
+            _logger.LogInformation($"{Account.BindAccount}:更新积分成功");
+            return true;
         }
     }
 }

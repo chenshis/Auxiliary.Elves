@@ -21,6 +21,7 @@ namespace Auxiliary.Elves.Client.Views
         {
             InitializeComponent();
             Loaded += async (sender, e) => await InitializeWebView2Async();
+            
         }
 
         public async Task InitializeWebView2Async()
@@ -74,7 +75,7 @@ namespace Auxiliary.Elves.Client.Views
             if (webView != null && webView.CoreWebView2 != null)
             {
                 var viewModel = this.DataContext as SessionViewModel;
-                var videoAddress = viewModel.GetVideoAddress();
+                var videoAddress = await viewModel.GetVideoAddressAsync();
                 string[] videos = { videoAddress };
                 string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
                 await webView.ExecuteScriptAsync(script);
@@ -95,14 +96,13 @@ namespace Auxiliary.Elves.Client.Views
                 {
                     var viewModel = this.DataContext as SessionViewModel;
                     // 执行结算任务
-                    await Task.Delay(2000); // 模拟耗时操作
                     var success = await viewModel.UpdatePoints();
                     // 通知WebView结算结果
                     string resultScript = $"settlementResult({success.ToString().ToLower()});";
                     await webView?.ExecuteScriptAsync(resultScript);
                     // 设置初始视频列表
 
-                    var videoAddress = viewModel.GetVideoAddress();
+                    var videoAddress = await viewModel.GetVideoAddressAsync();
                     string[] videos = { videoAddress };
                     string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
                     await webView.ExecuteScriptAsync(script);
