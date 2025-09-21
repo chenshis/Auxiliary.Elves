@@ -44,7 +44,7 @@ namespace Auxiliary.Elves.Server.Controllers
             if (!Directory.Exists(videoDirectory))
                 Directory.CreateDirectory(videoDirectory);
 
-            var filePath = Path.Combine(videoDirectory, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(videoDirectory, $"{Guid.NewGuid()}{ext}");
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
 

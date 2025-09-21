@@ -37,8 +37,8 @@ namespace Auxiliary.Elves.Api.ApiService
             if (string.IsNullOrWhiteSpace(userName))
                 return userDtos;
 
-            var userEntities = _dbContext.UserKeyEntities.Where(t => 
-              enabled ? t.Userkeylastdate != null : t.Userkeylastdate == null && t.Userid == userName).ToList();
+            var userEntities = _dbContext.UserKeyEntities.Where(t => t.Userid == userName&&
+             (enabled ? t.Userkeylastdate != null : t.Userkeylastdate == null)).ToList();
 
             if(!userEntities.Any())
                 return userDtos;
