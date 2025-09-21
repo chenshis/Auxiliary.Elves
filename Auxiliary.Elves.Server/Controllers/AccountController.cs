@@ -54,7 +54,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <summary>
         /// 根据账号查询卡密信息
         /// </summary>
-        /// <param name="userName"></param>
+        /// <param name="userName">账号</param>
         /// <param name="enabled">是否启用</param>
         /// <returns></returns>
         [HttpPost]

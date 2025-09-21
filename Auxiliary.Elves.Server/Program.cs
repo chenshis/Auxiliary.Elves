@@ -47,7 +47,15 @@ builder.Services.AddDbContext<AuxiliaryDbContext>((options) =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // 获取项目的 xml 注释文件路径
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    // 加载注释
+    c.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+});
 builder.Services.AddHttpClient();
 
 builder.Services.AddMemoryCache();

@@ -56,7 +56,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <summary>
         /// 查询提取记录
         /// </summary>
-        /// <param name="userName"></param>
+        /// <param name="userName">账号</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserPointsRecord)]
