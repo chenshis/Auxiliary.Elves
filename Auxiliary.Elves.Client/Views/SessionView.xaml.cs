@@ -136,8 +136,7 @@ namespace Auxiliary.Elves.Client.Views
 
 
         public string HtmlContent { get; set; }
-
-       = @"<!DOCTYPE html>
+     = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset=""utf-8"">
@@ -169,6 +168,29 @@ namespace Auxiliary.Elves.Client.Views
             width: 100%;
             height: 100%;
             object-fit: contain;
+        }
+        
+        /* 隐藏播放速度控制 */
+        video::-webkit-media-controls-playback-rate-button {
+            display: none !important;
+        }
+        
+        /* 隐藏全屏按钮 */
+        video::-webkit-media-controls-fullscreen-button {
+            display: none !important;
+        }
+        
+        /* 禁用进度条拖拽手柄 */
+        video::-webkit-media-controls-timeline::-webkit-slider-thumb {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
+        /* 禁用进度条交互但保持显示 */
+        video::-webkit-media-controls-timeline {
+            pointer-events: none !important;
+            cursor: default !important;
         }
         
         .settlement-screen {
@@ -217,7 +239,7 @@ namespace Auxiliary.Elves.Client.Views
 <body>
     <div class=""container"">
         <div class=""video-container"">
-            <video id=""videoPlayer"" controls></video>
+            <video id=""videoPlayer"" controls controlsList=""nodownload noremoteplayback noplaybackrate nofullscreen"" disablePictureInPicture></video>
             <div class=""settlement-screen"" id=""settlementScreen"">
                 <div class=""loading-spinner""></div>
                 <div class=""settlement-text"">结算任务执行中，请稍候...</div>
@@ -233,6 +255,7 @@ namespace Auxiliary.Elves.Client.Views
         
         let videoList = [];
         let currentVideoIndex = 0;
+        let lastTime = 0;
         
         // 初始化播放器
         function initializePlayer(videos) {
@@ -240,6 +263,42 @@ namespace Auxiliary.Elves.Client.Views
             if (videoList.length > 0) {
                 playVideo(0);
             }
+            
+            // 设置播放速度为正常速度
+            videoElement.playbackRate = 1.0;
+            
+            // 禁用键盘快捷键
+            videoElement.addEventListener('keydown', function(e) {
+                // 禁用空格键播放/暂停
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                }
+                // 禁用方向键快进快退
+                if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || 
+                    e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+                    e.preventDefault();
+                }
+                // 禁用PageUp/PageDown
+                if (e.code === 'PageUp' || e.code === 'PageDown') {
+                    e.preventDefault();
+                }
+                // 禁用Home/End键
+                if (e.code === 'Home' || e.code === 'End') {
+                    e.preventDefault();
+                }
+            });
+            
+            // 禁用右键菜单
+            videoElement.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // 禁用拖拽事件
+            videoElement.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
             
             // 监听来自WPF的消息
             window.chrome.webview.addEventListener('message', event => {
@@ -266,6 +325,10 @@ namespace Auxiliary.Elves.Client.Views
             currentVideoIndex = index;
             videoElement.src = videoList[index];
             
+            // 重置播放速度
+            videoElement.playbackRate = 1.0;
+            lastTime = 0;
+            
             videoElement.onloadeddata = () => {
                 videoElement.play();
             };
@@ -274,6 +337,41 @@ namespace Auxiliary.Elves.Client.Views
                 // 视频播放完成，显示结算屏幕
                 showSettlementScreen();
             };
+            
+            // 监听时间更新事件，防止快进
+            videoElement.ontimeupdate = function() {
+                const currentTime = Math.floor(videoElement.currentTime);
+                
+                // 如果时间跳跃超过1秒，认为是快进操作，重置时间
+                if (currentTime > lastTime + 1) {
+                    videoElement.currentTime = lastTime;
+                } else {
+                    lastTime = currentTime;
+                }
+            };
+            
+            // 监听快进尝试（拖拽进度条）
+            videoElement.onseeking = function() {
+                // 立即重置到上一次有效的时间点
+                videoElement.currentTime = lastTime;
+            };
+            
+            // 监听播放速率变化
+            videoElement.onratechange = function() {
+                if (videoElement.playbackRate !== 1.0) {
+                    videoElement.playbackRate = 1.0;
+                }
+            };
+            
+            // 禁用控制栏点击事件（特别是进度条区域）
+            videoElement.addEventListener('click', function(e) {
+                // 阻止进度条区域的点击事件
+                const controls = videoElement.controls;
+                if (controls) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
         }
         
         // 显示结算屏幕
@@ -299,7 +397,7 @@ namespace Auxiliary.Elves.Client.Views
                 // 2秒后播放下一个视频
                 setTimeout(() => {
                     settlementScreen.style.display = 'none';
-                    playVideo(currentVideoIndex);
+                    playVideo(currentVideoIndex + 1);
                 }, 2000);
             } else {
                 // 处理结算失败
@@ -316,6 +414,10 @@ namespace Auxiliary.Elves.Client.Views
         
         // 初始化
         window.addEventListener('DOMContentLoaded', () => {
+            // 设置视频元素属性以禁用控制
+            videoElement.controlsList = 'nodownload noremoteplayback noplaybackrate nofullscreen';
+            videoElement.disablePictureInPicture = true;
+            
             // 等待WebView2注入对象
             if (window.chrome && window.chrome.webview) {
                 window.chrome.webview.addEventListener('message', event => {
@@ -335,7 +437,5 @@ namespace Auxiliary.Elves.Client.Views
     </script>
 </body>
 </html>";
-
-
     }
 }
