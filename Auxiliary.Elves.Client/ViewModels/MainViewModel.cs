@@ -275,6 +275,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private async Task Delete(AccountModel m)
         {
+            _logger.LogInformation($"删除账号:{m.AccountId} {m.BindAccount}");
             var apiResponse = await _httpClient.PostAsync<bool>(
                   string.Concat(SystemConstant.DelUserRoute, $"?userkeyidserId={m.BindAccount}"));
             if (apiResponse == null)
