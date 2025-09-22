@@ -18,6 +18,7 @@ using System.Net.Http;
 using Auxiliary.Elves.Api.Dtos;
 using System.Security.Principal;
 using HandyControl.Controls;
+using Prism.Events;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -62,20 +63,35 @@ namespace Auxiliary.Elves.Client.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ILogger<MainViewModel> _logger;
         private readonly AuxElvesHttpClient _httpClient;
+        private readonly IEventAggregator _eventAggregator;
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
         private Dictionary<AccountModel, SessionView> SessionViews { get; set; }
 
         public MainViewModel(IWindowService windowService, IDialogService dialogService,
-            ILogger<MainViewModel> logger, AuxElvesHttpClient httpClient)
+            ILogger<MainViewModel> logger, AuxElvesHttpClient httpClient, IEventAggregator eventAggregator)
         {
             this._windowService = windowService;
             this._dialogService = dialogService;
             this._logger = logger;
             this._httpClient = httpClient;
+            this._eventAggregator = eventAggregator;
             Accounts = new ObservableCollection<AccountModel>();
             SessionViews = new Dictionary<AccountModel, SessionView>();
+            _eventAggregator.GetEvent<SubViewStatusEvent>().Subscribe(OnStatusMessageReceived, ThreadOption.UIThread);
+        }
+
+
+        private void OnStatusMessageReceived(StatusMessage message)
+        {
+            if (SessionViews != null && SessionViews.ContainsKey(message.Message))
+            {
+                SessionViews[message.Message] = null;
+                message.Message.Status = false;
+            }
+            // 处理接收到的消息，更新UI或执行其他逻辑
+            _logger.LogInformation($"{message.Timestamp:HH:mm:ss} 收到来自{message.Message}消息：Close");
         }
 
         private async Task StartHost()
@@ -186,7 +202,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             foreach (var item in apiResponse.Data)
             {
                 var filterData = Accounts
-                    .Where(t => t.AccountId == item.Userid && t.BindAccount == item.Userkey)
+                    .Where(t => t.AccountId == item.Userid && t.BindAccount == item.Userkeyid)
                     .Count();
                 if (filterData > 0)
                 {
@@ -237,7 +253,14 @@ namespace Auxiliary.Elves.Client.ViewModels
             m.Status = !m.Status;
             if (m.Status)
             {
-                SessionViews[m].Start();
+                if (SessionViews[m] != null)
+                {
+                    SessionViews[m].Start();
+                }
+                else
+                {
+                    SessionViews[m] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(m);
+                }
             }
             else
             {

@@ -4,6 +4,7 @@ using HandyControl.Controls;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Wpf;
+using Prism.Events;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -17,13 +18,22 @@ namespace Auxiliary.Elves.Client.ViewModels
     {
         private readonly ILogger<SessionViewModel> _logger;
         private readonly AuxElvesHttpClient _httpClient;
+        private readonly IEventAggregator _eventAggregator;
 
         public AccountModel Account { get; set; }
 
-        public SessionViewModel(ILogger<SessionViewModel> logger, AuxElvesHttpClient httpClient)
+        public SessionViewModel(ILogger<SessionViewModel> logger, AuxElvesHttpClient httpClient, IEventAggregator eventAggregator)
         {
             this._logger = logger;
             this._httpClient = httpClient;
+            this._eventAggregator = eventAggregator;
+        }
+
+        public void ExecutePublishMessage()
+        {
+            // 创建并发布消息
+            var message = new StatusMessage { Message = Account, Timestamp = DateTime.Now };
+            _eventAggregator.GetEvent<SubViewStatusEvent>().Publish(message);
         }
 
         public void RecordInfo(string message)

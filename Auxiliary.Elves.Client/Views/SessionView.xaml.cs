@@ -21,7 +21,16 @@ namespace Auxiliary.Elves.Client.Views
         {
             InitializeComponent();
             Loaded += async (sender, e) => await InitializeWebView2Async();
-            
+            Closing += SessionView_Closing;
+        }
+
+        private void SessionView_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            var viewModel = this.DataContext as SessionViewModel;
+            if (viewModel != null)
+            {
+                viewModel.ExecutePublishMessage();
+            }
         }
 
         public async Task InitializeWebView2Async()
