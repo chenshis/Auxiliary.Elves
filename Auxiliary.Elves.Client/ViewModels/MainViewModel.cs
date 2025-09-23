@@ -411,8 +411,9 @@ namespace Auxiliary.Elves.Client.ViewModels
                     SessionViews.Clear();
                 }
                 // 优雅关闭服务器
-                _webHost?.StopAsync().Wait(3000);
-                _webHost?.Dispose();
+                //_webHost?.StopAsync().Wait(3000);
+                //_webHost?.Dispose();
+                _timer?.Stop();
             });
         }
 
