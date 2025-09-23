@@ -67,7 +67,7 @@
         <!-- 公告区域 -->
         <Border Grid.Row="0" CornerRadius="3">
             <hc:RunningBlock Content="{Binding Announcement}" 
-                             Speed="50" Margin="10,5" FontWeight="Bold"/>
+                             Speed="50" Margin="10,5" FontSize="16" FontWeight="Bold"/>
         </Border>
         <!-- 主内容区域 -->
         <Grid Grid.Row="1">
