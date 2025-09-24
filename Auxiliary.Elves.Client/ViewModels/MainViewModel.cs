@@ -19,6 +19,7 @@ using Auxiliary.Elves.Api.Dtos;
 using System.Security.Principal;
 using HandyControl.Controls;
 using Prism.Events;
+using System.Windows.Threading;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -64,6 +65,7 @@ namespace Auxiliary.Elves.Client.ViewModels
         private readonly ILogger<MainViewModel> _logger;
         private readonly AuxElvesHttpClient _httpClient;
         private readonly IEventAggregator _eventAggregator;
+        private readonly DispatcherTimer _timer;
 
         public ObservableCollection<AccountModel> Accounts { get; set; }
 
@@ -80,8 +82,18 @@ namespace Auxiliary.Elves.Client.ViewModels
             Accounts = new ObservableCollection<AccountModel>();
             SessionViews = new Dictionary<AccountModel, SessionView>();
             _eventAggregator.GetEvent<SubViewStatusEvent>().Subscribe(OnStatusMessageReceived, ThreadOption.UIThread);
+            // 初始化定时器
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromMinutes(1); // 设置间隔为60秒
+            _timer.Tick += async (sender, e) => await Timer_Tick(sender, e); // 订阅Tick事件
+            // 启动定时器
+            _timer.Start();
         }
 
+        private async Task Timer_Tick(object sender, EventArgs e)
+        {
+            await GetAnnouncement();
+        }
 
         private void OnStatusMessageReceived(StatusMessage message)
         {
@@ -240,7 +252,8 @@ namespace Auxiliary.Elves.Client.ViewModels
                 Growl.Warning("请检查网络连接是否正常");
                 return;
             }
-            Announcement = string.Join("；", apiResponse.Data.Select(t => t.Announcement));
+            Announcement = string.Join("                                         ",
+                apiResponse.Data.Select(t => t.Announcement));
         }
 
         public ICommand ToggleCommand
@@ -275,6 +288,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private async Task Delete(AccountModel m)
         {
+            _logger.LogInformation($"删除账号:{m.AccountId} {m.BindAccount}");
             var apiResponse = await _httpClient.PostAsync<bool>(
                   string.Concat(SystemConstant.DelUserRoute, $"?userkeyidserId={m.BindAccount}"));
             if (apiResponse == null)
@@ -305,6 +319,12 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private void SetArrangeKeys()
         {
+            if (SessionViews == null || SessionViews.Count <= 0)
+            {
+                _logger.LogInformation($"没有子视图，无法进行一键排列");
+                return;
+            }
+            _logger.LogInformation($"对当前子窗口进行一件排列，数量:{SessionViews.Count()}");
             // 获取主屏幕的工作区域（排除任务栏）
             var workingArea = System.Windows.SystemParameters.WorkArea;
 
@@ -391,8 +411,9 @@ namespace Auxiliary.Elves.Client.ViewModels
                     SessionViews.Clear();
                 }
                 // 优雅关闭服务器
-                _webHost?.StopAsync().Wait(3000);
-                _webHost?.Dispose();
+                //_webHost?.StopAsync().Wait(3000);
+                //_webHost?.Dispose();
+                _timer?.Stop();
             });
         }
 
@@ -408,8 +429,8 @@ namespace Auxiliary.Elves.Client.ViewModels
         {
             get => new DelegateCommand(async () =>
             {
+                //await StartHost();
                 await GetAnnouncement();
-                await StartHost();
                 await DataQuery();
             });
         }
