@@ -1,11 +1,11 @@
 ; -- 辅助精灵安装脚本 --
 #define MyAppName "Auxiliary Elves"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "Your Company"
+#define MyAppVersion "1.0.1"
+#define MyAppPublisher "Auxiliary Elves"
 #define MyAppExeName "Auxiliary.Elves.Client.exe"
 #define SourcePath "D:\Workspace\Axu\Auxiliary.Elves.Client\bin\Release\net6.0-windows\"
 #define IconPath "D:\Workspace\Axu\Auxiliary.Elves.Client\Assets\logo.ico"
-#define DotNetInstaller "windowsdesktop-runtime-6.0.8-win-x64.exe"  ; 本地运行时安装包文件名
+#define DotNetInstaller "windowsdesktop-runtime-6.0.23-win-x64.exe"  ; 本地运行时安装包文件名
 #define DotNetInstallerPath "D:\Workspace\Axu\" + DotNetInstaller  ; 运行时安装包完整路径
 
 [Setup]
@@ -30,7 +30,8 @@ ArchitecturesInstallIn64BitMode=x64
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
+Name: "desktopicon"; Description: "创建桌面图标(&D)"; GroupDescription: "附加图标:"; Flags: unchecked
+Name: "desktopicon\english"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
 
 [Files]
 ; 打包 Release 目录下的所有内容和子目录
@@ -61,18 +62,18 @@ begin
   
   // 方法2: 检查具体的版本号
   if not success then
-    success := RegKeyExists(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App\6.0.8');
+    success := RegKeyExists(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App\6.0.23');
   
   // 方法3: 检查安装目录是否存在
   if not success then
   begin
-    installPath := ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.8\');
+    installPath := ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.23\');
     success := DirExists(installPath);
   end;
   
   // 方法4: 检查文件是否存在
   if not success then
-    success := FileExists(ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.8\WindowsBase.dll'));
+    success := FileExists(ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.23\WindowsBase.dll'));
   
   // 方法5: 检查WOW6432Node注册表
   if not success then
