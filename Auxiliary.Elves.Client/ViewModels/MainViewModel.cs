@@ -196,6 +196,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             string mac = _logger.GetMac();
             if (mac == null)
             {
+                _logger.LogInformation("没有获取设备信息");
                 return;
             }
             var apiResponse = await _httpClient.PostAsync<List<UserDto>>(
@@ -214,7 +215,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             foreach (var item in apiResponse.Data)
             {
                 var filterData = Accounts
-                    .Where(t => t.AccountId == item.Userid && t.BindAccount == item.Userkeyid)
+                    .Where(t => t.AccountId == item.Userkeyid && t.BindAccount == item.Userid)
                     .Count();
                 if (filterData > 0)
                 {
@@ -222,8 +223,8 @@ namespace Auxiliary.Elves.Client.ViewModels
                 }
                 var account = new AccountModel()
                 {
-                    AccountId = item.Userid,
-                    BindAccount = item.Userkeyid,
+                    AccountId = item.Userkeyid,
+                    BindAccount = item.Userid,
                     ExpireTime = item.ExpireDate,
                     Status = true
                 };
@@ -268,15 +269,18 @@ namespace Auxiliary.Elves.Client.ViewModels
             {
                 if (SessionViews[m] != null)
                 {
+                    _logger.LogInformation($"{m.AccountId}实例信息存在，启动播放软件");
                     SessionViews[m].Start();
                 }
                 else
                 {
+                    _logger.LogInformation($"{m.AccountId}实例信息不存在，重新启动播放软件");
                     SessionViews[m] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(m);
                 }
             }
             else
             {
+                _logger.LogInformation($"{m.AccountId}停止播放软件");
                 SessionViews[m].Stop();
             }
         }
@@ -288,9 +292,9 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         private async Task Delete(AccountModel m)
         {
-            _logger.LogInformation($"删除账号:{m.AccountId} {m.BindAccount}");
+            _logger.LogInformation($"删除账号:{m.AccountId}；绑定账号：{m.BindAccount}");
             var apiResponse = await _httpClient.PostAsync<bool>(
-                  string.Concat(SystemConstant.DelUserRoute, $"?userkeyidserId={m.BindAccount}"));
+                  string.Concat(SystemConstant.DelUserRoute, $"?userkeyidserId={m.AccountId}"));
             if (apiResponse == null)
             {
                 _logger.LogError($"删除账号无响应");

@@ -38,9 +38,9 @@ namespace Auxiliary.Elves.Client.Views
             var viewModel = this.DataContext as SessionViewModel;
             try
             {
-                viewModel.RecordInfo($"绑定账号：{viewModel.Account.BindAccount}初始换窗口");
+                viewModel.RecordInfo($"账号：{viewModel.Account.AccountId}初始换窗口");
 
-                this.Title = viewModel.Account.BindAccount;
+                this.Title = viewModel.Account.AccountId;
                 string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
                 if (!Directory.Exists(userDataFolder))
                 {

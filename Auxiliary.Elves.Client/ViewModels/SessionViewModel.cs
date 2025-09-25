@@ -60,7 +60,7 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public async Task<string> GetVideoAddressAsync()
         {
-            _logger.LogInformation($"{Account.BindAccount}:拉取视频");
+            _logger.LogInformation($"{Account.AccountId}:拉取视频");
             var apiResponse = await _httpClient.PostAsync<string>(SystemConstant.VideoVideoUrlRoute);
             if (apiResponse == null)
             {
@@ -77,15 +77,15 @@ namespace Auxiliary.Elves.Client.ViewModels
         public async Task<bool> UpdatePoints()
         {
 
-            var userName = Account.AccountId;
+            var userName = Account.BindAccount;
             var apiResponse = await _httpClient.PostAsync<bool>(string.Concat(SystemConstant.AddPointsRoute, $"?userName={userName}"));
 
             if (apiResponse?.Data == false)
             {
-                _logger.LogError($"{Account.BindAccount}:更新积分失败");
+                _logger.LogError($"{Account.AccountId}:更新积分失败");
                 return false;
             }
-            _logger.LogInformation($"{Account.BindAccount}:更新积分成功");
+            _logger.LogInformation($"{Account.AccountId}:更新积分成功");
             return true;
         }
     }

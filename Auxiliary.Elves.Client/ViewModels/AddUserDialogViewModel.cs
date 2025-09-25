@@ -175,9 +175,9 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
             var apiResponse = await _httpClient.PostAsync<AccountRequestDto, bool>(SystemConstant.LoginRoute, new AccountRequestDto
             {
-                UserName = UserName,
+                UserName = Contacts,
                 Password = Password,
-                UserKeyId = Contacts,
+                UserKeyId = UserName,
                 Mac = mac
             });
             if (apiResponse == null)
