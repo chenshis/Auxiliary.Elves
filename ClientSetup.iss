@@ -1,12 +1,12 @@
-; -- è¾…åŠ©ç²¾çµå®‰è£…è„šæœ¬ --
+; -- ¸¨Öú¾«Áé°²×°½Å±¾ --
 #define MyAppName "Auxiliary Elves"
-#define MyAppVersion "1.0.1"
-#define MyAppPublisher "Auxiliary Elves"
+#define MyAppVersion "1.0.0"
+#define MyAppPublisher "Your Company"
 #define MyAppExeName "Auxiliary.Elves.Client.exe"
 #define SourcePath "D:\Workspace\Axu\Auxiliary.Elves.Client\bin\Release\net6.0-windows\"
 #define IconPath "D:\Workspace\Axu\Auxiliary.Elves.Client\Assets\logo.ico"
-#define DotNetInstaller "windowsdesktop-runtime-6.0.23-win-x64.exe"  ; æœ¬åœ°è¿è¡Œæ—¶å®‰è£…åŒ…æ–‡ä»¶å
-#define DotNetInstallerPath "D:\Workspace\Axu\" + DotNetInstaller  ; è¿è¡Œæ—¶å®‰è£…åŒ…å®Œæ•´è·¯å¾„
+#define DotNetRuntimeInstaller "windowsdesktop-runtime-6.0.36-win-x64.exe"
+#define DotNetAspNetCoreRuntime "aspnetcore-runtime-6.0.36-win-x64.exe"
 
 [Setup]
 AppId={{3F13D2A1-8C4F-4A3B-9E6D-7B8C9A2B1C3D}
@@ -30,177 +30,168 @@ ArchitecturesInstallIn64BitMode=x64
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "åˆ›å»ºæ¡Œé¢å›¾æ ‡(&D)"; GroupDescription: "é™„åŠ å›¾æ ‡:"; Flags: unchecked
-Name: "desktopicon\english"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.01
 
 [Files]
-; æ‰“åŒ… Release ç›®å½•ä¸‹çš„æ‰€æœ‰å†…å®¹å’Œå­ç›®å½•
-Source: "{#SourcePath}*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-; .NET è¿è¡Œæ—¶å®‰è£…åŒ…ï¼ˆæ‰“åŒ…åˆ°å®‰è£…ç¨‹åºä¸­ï¼‰
-Source: "{#DotNetInstallerPath}"; DestDir: "{tmp}"; Flags: deleteafterinstall
+; Ö÷³ÌĞòÎÄ¼ş
+Source: "{#SourcePath}*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+; .NET 6 ÔËĞĞÊ±°²×°³ÌĞò
+Source: "{#DotNetRuntimeInstaller}"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall solidbreak
+Source: "{#DotNetAspNetCoreRuntime}"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall solidbreak
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+; °²×° .NET 6 ×ÀÃæÔËĞĞÊ±£¨Èç¹ûĞèÒª£©
+Filename: "{tmp}\{#DotNetRuntimeInstaller}"; \
+    Parameters: "/install /quiet /norestart"; \
+    StatusMsg: "ÕıÔÚ°²×° .NET 6 ×ÀÃæÔËĞĞÊ±..."; \
+    Check: IsDotNetDesktopRuntimeNeeded; \
+    Flags: waituntilterminated
+
+; °²×° ASP.NET Core ÔËĞĞÊ±£¨Èç¹ûĞèÒª£©
+Filename: "{tmp}\{#DotNetAspNetCoreRuntime}"; \
+    Parameters: "/install /quiet /norestart"; \
+    StatusMsg: "ÕıÔÚ°²×° ASP.NET Core ÔËĞĞÊ±..."; \
+    Check: IsAspNetCoreRuntimeNeeded; \
+    Flags: waituntilterminated
+
+; Æô¶¯Ó¦ÓÃ³ÌĞò
+Filename: "{app}\{#MyAppExeName}"; \
+    Description: "Æô¶¯ {#MyAppName}"; \
+    Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{sys}\taskkill.exe"; Parameters: "/f /im {#MyAppExeName}"; Flags: runhidden waituntilterminated
 
 [Code]
-// æ£€æµ‹.NET 6æ¡Œé¢è¿è¡Œæ—¶æ˜¯å¦å·²å®‰è£…
-function IsDotNet60Installed: Boolean;
+function IsDotNetDesktopRuntimeNeeded: Boolean;
 var
-  success: Boolean;
-  releaseVersion: Cardinal;
-  version: string;
-  installPath: string;
+  Version: string;
+  Install: Boolean;
 begin
-  // æ–¹æ³•1: æ£€æŸ¥æ³¨å†Œè¡¨ - æ–°å¼.NET 6+ å®‰è£…
-  success := RegQueryDWordValue(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App', 'Version', releaseVersion);
+  // ¼ì²éÊÇ·ñÒÑ°²×° .NET 6 ×ÀÃæÔËĞĞÊ±
+  Install := True;
   
-  // æ–¹æ³•2: æ£€æŸ¥å…·ä½“çš„ç‰ˆæœ¬å·
-  if not success then
-    success := RegKeyExists(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App\6.0.23');
-  
-  // æ–¹æ³•3: æ£€æŸ¥å®‰è£…ç›®å½•æ˜¯å¦å­˜åœ¨
-  if not success then
+  // ·½·¨1: ¼ì²é×¢²á±í
+  if RegQueryStringValue(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App', '6.0.36', Version) then
   begin
-    installPath := ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.23\');
-    success := DirExists(installPath);
+    if Version <> '' then
+      Install := False;
   end;
   
-  // æ–¹æ³•4: æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
-  if not success then
-    success := FileExists(ExpandConstant('{sd}\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.23\WindowsBase.dll'));
+  // ·½·¨2: ¼ì²éÆäËû¿ÉÄÜµÄ×¢²á±íÂ·¾¶
+  if Install and RegKeyExists(HKLM, 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App\6.0.36') then
+    Install := False;
   
-  // æ–¹æ³•5: æ£€æŸ¥WOW6432Nodeæ³¨å†Œè¡¨
-  if not success then
-    success := RegKeyExists(HKLM, 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App');
-
-  Result := success;
+  // ·½·¨3: ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
+  if Install and FileExists(ExpandConstant('{sys}\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.36\WpfGfx.exe')) then
+    Install := False;
   
-  // è°ƒè¯•ä¿¡æ¯ï¼ˆå¦‚æœéœ€è¦æŸ¥çœ‹æ£€æµ‹ç»“æœï¼Œå¯ä»¥å–æ¶ˆæ³¨é‡Šï¼‰
-  {
+  Result := Install;
+  
   if Result then
-    MsgBox('.NET 6.0 Runtime is installed.', mbInformation, MB_OK)
+    Log('.NET Desktop Runtime ĞèÒª°²×°')
   else
-    MsgBox('.NET 6.0 Runtime is not installed.', mbInformation, MB_OK);
-  }
+    Log('.NET Desktop Runtime ÒÑ°²×°£¬Ìø¹ı°²×°');
 end;
 
-// å®‰è£….NETè¿è¡Œæ—¶
-function InstallDotNetRuntime: Boolean;
+function IsAspNetCoreRuntimeNeeded: Boolean;
 var
-  ResultCode: Integer;
-  InstallerPath: string;
+  Version: string;
+  Install: Boolean;
 begin
-  Result := True;
+  // ¼ì²éÊÇ·ñÒÑ°²×° ASP.NET Core 6 ÔËĞĞÊ±
+  Install := True;
   
-  // è·å–è¿è¡Œæ—¶å®‰è£…åŒ…çš„è·¯å¾„
-  InstallerPath := ExpandConstant('{tmp}\{#DotNetInstaller}');
-  
-  // æ£€æŸ¥å®‰è£…åŒ…æ˜¯å¦å­˜åœ¨
-  if not FileExists(InstallerPath) then
+  // ·½·¨1: ¼ì²é×¢²á±í
+  if RegQueryStringValue(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.AspNetCore.App', '6.0.36', Version) then
   begin
-    MsgBox('.NET Runtime installer not found in temporary directory.' + #13#10 +
-           'Please make sure the file {#DotNetInstaller} is included in the setup.', 
-           mbError, MB_OK);
-    Result := False;
-    Exit;
+    if Version <> '' then
+      Install := False;
   end;
   
-  // æ˜¾ç¤ºå®‰è£…æç¤º
-  if MsgBox('This application requires Microsoft .NET 6.0 Desktop Runtime.' + #13#10 +
-            'The runtime will now be installed silently. This may take a few minutes.' + #13#10 +
-            'Do you want to continue?', 
-            mbConfirmation, MB_YESNO) = IDNO then
-  begin
-    Result := False;
-    Exit;
-  end;
+  // ·½·¨2: ¼ì²éÆäËû¿ÉÄÜµÄ×¢²á±íÂ·¾¶
+  if Install and RegKeyExists(HKLM, 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.AspNetCore.App\6.0.36') then
+    Install := False;
   
-  // æ˜¾ç¤ºè¿›åº¦ä¿¡æ¯
-  MsgBox('Installing .NET 6.0 Runtime...' + #13#10 +
-         'Please wait, this may take several minutes.', 
-         mbInformation, MB_OK);
+  // ·½·¨3: ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
+  if Install and FileExists(ExpandConstant('{sys}\dotnet\shared\Microsoft.AspNetCore.App\6.0.36\Microsoft.AspNetCore.dll')) then
+    Install := False;
   
-  // æ‰§è¡Œå®‰è£…ï¼ˆé™é»˜å®‰è£…ï¼Œä¸æ˜¾ç¤ºç•Œé¢ï¼‰
-  if Exec(InstallerPath, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-  begin
-    // æ£€æŸ¥å®‰è£…ç»“æœ
-    case ResultCode of
-      0: 
-        begin
-          MsgBox('.NET 6.0 Runtime installed successfully.', mbInformation, MB_OK);
-          Result := True;
-        end;
-      3010: 
-        begin
-          MsgBox('.NET 6.0 Runtime installed successfully.' + #13#10 +
-                 'A system restart is recommended for changes to take effect.', 
-                 mbInformation, MB_OK);
-          Result := True;
-        end;
-      else
-        begin
-          MsgBox('.NET Runtime installation failed with error code: ' + IntToStr(ResultCode) + #13#10 +
-                 'Please install .NET 6.0 manually from Microsoft website.', 
-                 mbError, MB_OK);
-          Result := False;
-        end;
-    end;
-  end
+  Result := Install;
+  
+  if Result then
+    Log('ASP.NET Core Runtime ĞèÒª°²×°')
   else
-  begin
-    MsgBox('Failed to execute .NET Runtime installer.', mbError, MB_OK);
-    Result := False;
-  end;
+    Log('ASP.NET Core Runtime ÒÑ°²×°£¬Ìø¹ı°²×°');
 end;
 
-// åˆå§‹åŒ–å®‰è£…
 function InitializeSetup: Boolean;
-var
-  DotNetRequired: Boolean;
 begin
+  // ³õÊ¼»¯¼ì²é
   Result := True;
   
-  // æ£€æŸ¥.NETè¿è¡Œæ—¶æ˜¯å¦å·²å®‰è£…
-  if not IsDotNet60Installed then
+  // ¼ì²éÊÇ·ñ64Î»ÏµÍ³
+  if not Is64BitInstallMode then
   begin
-    // å°è¯•å®‰è£….NETè¿è¡Œæ—¶
-    if not InstallDotNetRuntime then
-    begin
-      // å®‰è£…å¤±è´¥ï¼Œè¯¢é—®æ˜¯å¦ç»§ç»­
-      if MsgBox('.NET Runtime installation failed or was cancelled.' + #13#10 +
-                'The application may not work without .NET 6.0 Desktop Runtime.' + #13#10 +
-                'Do you want to continue with the application installation?', 
-                mbConfirmation, MB_YESNO) = IDNO then
-      begin
-        Result := False;
-      end;
-    end
-    else
-    begin
-      // å®‰è£…æˆåŠŸï¼Œç­‰å¾…ä¸€ä¸‹è®©ç³»ç»Ÿæ³¨å†Œè¡¨æ›´æ–°
-      Sleep(2000);
-    end;
+    MsgBox('´ËÓ¦ÓÃ³ÌĞòĞèÒª64Î»Windows²Ù×÷ÏµÍ³¡£', mbError, MB_OK);
+    Result := False;
+    Exit;
   end;
 end;
 
-// å®‰è£…å®Œæˆåæœ€ç»ˆæ£€æŸ¥
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if CurStep = ssPostInstall then
-  begin
-    // æœ€ç»ˆéªŒè¯.NETæ˜¯å¦å®‰è£…æˆåŠŸ
-    if not IsDotNet60Installed then
-    begin
-      MsgBox('Warning: .NET 6.0 Runtime may not be installed correctly.' + #13#10 +
-             'If the application does not start, please manually install:' + #13#10 +
-             'https://dotnet.microsoft.com/download/dotnet/6.0', 
-             mbInformation, MB_OK);
-    end;
+  case CurStep of
+    ssInstall:
+      begin
+        // °²×°¿ªÊ¼Ç°¼ÇÂ¼
+        Log('¿ªÊ¼°²×°¹ı³Ì');
+        
+        // ¼ÇÂ¼ÔËĞĞÊ±°²×°×´Ì¬
+        if IsDotNetDesktopRuntimeNeeded then
+          Log('ĞèÒª°²×° .NET Desktop Runtime')
+        else
+          Log('.NET Desktop Runtime ÒÑ´æÔÚ');
+          
+        if IsAspNetCoreRuntimeNeeded then
+          Log('ĞèÒª°²×° ASP.NET Core Runtime')
+        else
+          Log('ASP.NET Core Runtime ÒÑ´æÔÚ');
+      end;
+    ssPostInstall:
+      begin
+        // °²×°ºó´¦Àí
+        Log('°²×°²½ÖèÍê³É');
+      end;
   end;
+end;
+
+function InitializeUninstall: Boolean;
+begin
+  // Ğ¶ÔØÇ°¼ì²é³ÌĞòÊÇ·ñÔÚÔËĞĞ
+  if CheckForMutexes('AuxiliaryElves') or CheckForMutexes('Auxiliary.Elves.Client') then
+  begin
+    if MsgBox('¼ì²âµ½Ó¦ÓÃ³ÌĞòÕıÔÚÔËĞĞ¡£ÊÇ·ñ¼ÌĞøĞ¶ÔØ£¿', mbConfirmation, MB_YESNO) = IDNO then
+      Result := False
+    else
+      Result := True;
+  end
+  else
+    Result := True;
+end;
+
+// ¼ì²éÓ¦ÓÃ³ÌĞòÊÇ·ñÔÚÔËĞĞµÄÌæ´ú·½·¨
+function IsProcessRunning(const ExeFileName: string): Boolean;
+var
+  ResultCode: Integer;
+begin
+  // Ê¹ÓÃÃüÁîĞĞ¹¤¾ß¼ì²é½ø³Ì
+  Exec('cmd.exe', '/C tasklist /FI "IMAGENAME eq ' + ExeFileName + '" | find /I "' + ExeFileName + '" > nul', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Result := (ResultCode = 0); // ÕÒµ½½ø³Ì·µ»Ø0
 end;
