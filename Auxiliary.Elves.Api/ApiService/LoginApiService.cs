@@ -77,7 +77,8 @@ namespace Auxiliary.Elves.Api.ApiService
             if (string.IsNullOrWhiteSpace(mac))
                 return userDtos;
 
-            var userEntities = _dbContext.UserKeyEntities.Where(t =>t.Userkeyip==mac).ToList();
+            var userEntities = _dbContext.UserKeyEntities.Where(t => t.Userkeylastdate != null
+           && t.Isonline && t.Userkeyip == mac).ToList();
 
             if (!userEntities.Any())
                 return userDtos;
@@ -93,21 +94,13 @@ namespace Auxiliary.Elves.Api.ApiService
                     Isonline = user.Isonline,
                 };
 
-                if (user.Isonline)
-                {
-                    if (!string.IsNullOrWhiteSpace(user.Userkeyip))
-                    {
 
-                   
-                        DateTime expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
+                DateTime expireDate;
+                expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
+                userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
 
-                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
-
-                    }
-                }
-               
-
-                userDtos.Add(userInfo);
+                if (expireDate >= DateTime.Now)
+                    userDtos.Add(userInfo);
             }
 
           

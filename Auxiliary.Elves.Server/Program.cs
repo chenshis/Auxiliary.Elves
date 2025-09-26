@@ -4,6 +4,7 @@ using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
 using Auxiliary.Elves.Server.Exceptions;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using NLog.Web;
@@ -36,6 +37,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 314572800; // 300 MB
+});
 
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();

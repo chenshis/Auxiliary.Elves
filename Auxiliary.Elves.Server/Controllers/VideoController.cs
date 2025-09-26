@@ -25,6 +25,8 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.VideoUploadRoute)]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(MultipartBodyLengthLimit = 314572800)]
         public async Task<bool> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
