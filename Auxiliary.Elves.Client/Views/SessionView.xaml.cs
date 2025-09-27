@@ -38,9 +38,9 @@ namespace Auxiliary.Elves.Client.Views
             var viewModel = this.DataContext as SessionViewModel;
             try
             {
-                viewModel.RecordInfo($"绑定账号：{viewModel.Account.BindAccount}初始换窗口");
+                viewModel.RecordInfo($"账号：{viewModel.Account.AccountId}初始换窗口");
 
-                this.Title = viewModel.Account.BindAccount;
+                this.Title = viewModel.Account.AccountId;
                 string userDataFolder = System.IO.Path.Combine(Environment.CurrentDirectory, "UserData", Guid.NewGuid().ToString());
                 if (!Directory.Exists(userDataFolder))
                 {
@@ -106,6 +106,7 @@ namespace Auxiliary.Elves.Client.Views
                     var viewModel = this.DataContext as SessionViewModel;
                     // 执行结算任务
                     var success = await viewModel.UpdatePoints();
+                    await Task.Delay(2000);
                     // 通知WebView结算结果
                     string resultScript = $"settlementResult({success.ToString().ToLower()});";
                     await webView?.ExecuteScriptAsync(resultScript);
@@ -134,9 +135,8 @@ namespace Auxiliary.Elves.Client.Views
             webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"stop\"}");
         }
 
-
         public string HtmlContent { get; set; }
-     = @"<!DOCTYPE html>
+    = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset=""utf-8"">
@@ -170,27 +170,9 @@ namespace Auxiliary.Elves.Client.Views
             object-fit: contain;
         }
         
-        /* 隐藏播放速度控制 */
-        video::-webkit-media-controls-playback-rate-button {
+        /* 隐藏整个控制栏 */
+        video::-webkit-media-controls {
             display: none !important;
-        }
-        
-        /* 隐藏全屏按钮 */
-        video::-webkit-media-controls-fullscreen-button {
-            display: none !important;
-        }
-        
-        /* 禁用进度条拖拽手柄 */
-        video::-webkit-media-controls-timeline::-webkit-slider-thumb {
-            display: none !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-        }
-        
-        /* 禁用进度条交互但保持显示 */
-        video::-webkit-media-controls-timeline {
-            pointer-events: none !important;
-            cursor: default !important;
         }
         
         .settlement-screen {
@@ -199,51 +181,134 @@ namespace Auxiliary.Elves.Client.Views
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(30, 30, 30, 0.95);
+            background: #000;
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 200;
+            overflow: hidden;
         }
         
+        /* 代码雨容器 */
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .code-column {
+            position: absolute;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #0f0;
+            animation: codeFall linear infinite;
+        }
+        
+        .code-char {
+            opacity: 0;
+            animation: charFade linear infinite;
+        }
+        
+        @keyframes codeFall {
+            0% {
+                transform: translateY(-100px);
+            }
+            100% {
+                transform: translateY(100vh);
+            }
+        }
+        
+        @keyframes charFade {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        /* 处理中内容 */
+        .processing-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+        
+        .processing-text {
+            font-size: 24px;
+            color: #0f0;
+            margin-bottom: 30px;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* Loading 转圈圈 */
         .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 255, 0, 0.3);
             border-radius: 50%;
-            border-top-color: #4ca1af;
+            border-top-color: #0f0;
             animation: spin 1s ease-in-out infinite;
-            margin-bottom: 20px;
+            margin: 0 auto;
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         
-        .settlement-text {
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            text-align: center;
+        /* 结算完成白屏 */
+        .completion-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
         }
         
-        .success-message {
-            color: #4CAF50;
-            font-size: 20px;
-            margin-top: 15px;
-            display: none;
+        .completion-loading {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""video-container"">
-            <video id=""videoPlayer"" controls controlsList=""nodownload noremoteplayback noplaybackrate nofullscreen"" disablePictureInPicture></video>
+            <video id=""videoPlayer""></video>
+            
+            <!-- 结算中屏幕 -->
             <div class=""settlement-screen"" id=""settlementScreen"">
-                <div class=""loading-spinner""></div>
-                <div class=""settlement-text"">结算任务执行中，请稍候...</div>
-                <div class=""success-message"" id=""successMessage"">✓ 结算成功！</div>
+                <div class=""matrix-rain"" id=""matrixRain""></div>
+                <div class=""processing-content"">
+                    <div class=""processing-text"">任务正在处理……</div>
+                    <div class=""loading-spinner""></div>
+                </div>
+            </div>
+            
+            <!-- 结算完成白屏 -->
+            <div class=""completion-screen"" id=""completionScreen"">
+                <div class=""completion-loading""></div>
             </div>
         </div>
     </div>
@@ -251,11 +316,63 @@ namespace Auxiliary.Elves.Client.Views
     <script>
         let videoElement = document.getElementById('videoPlayer');
         let settlementScreen = document.getElementById('settlementScreen');
-        let successMessage = document.getElementById('successMessage');
+        let completionScreen = document.getElementById('completionScreen');
+        let matrixRain = document.getElementById('matrixRain');
         
         let videoList = [];
         let currentVideoIndex = 0;
         let lastTime = 0;
+        
+        // 26个英文字母
+        const chars = 'abcdefghijklmnopqrstuvwxyz';
+        
+        // 创建代码雨效果
+        function createMatrixRain() {
+            matrixRain.innerHTML = '';
+            
+            const columns = Math.floor(window.innerWidth / 25);
+            
+            for (let i = 0; i < columns; i++) {
+                createCodeColumn(i * 25);
+            }
+        }
+        
+        function createCodeColumn(left) {
+            const column = document.createElement('div');
+            column.className = 'code-column';
+            column.style.left = left + 'px';
+            
+            const duration = 2 + Math.random() * 3;
+            const delay = Math.random() * 2;
+            
+            column.style.animationDuration = duration + 's';
+            column.style.animationDelay = delay + 's';
+            
+            // 创建字符
+            const charCount = 20 + Math.floor(Math.random() * 15);
+            for (let j = 0; j < charCount; j++) {
+                const char = document.createElement('div');
+                char.className = 'code-char';
+                char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                
+                const charDuration = 0.3 + Math.random() * 0.7;
+                const charDelay = j * 0.08;
+                
+                char.style.animationDuration = charDuration + 's';
+                char.style.animationDelay = charDelay + 's';
+                
+                column.appendChild(char);
+            }
+            
+            matrixRain.appendChild(column);
+            
+            setTimeout(() => {
+                if (column.parentNode) {
+                    column.parentNode.removeChild(column);
+                }
+                createCodeColumn(left);
+            }, (duration + delay) * 1000);
+        }
         
         // 初始化播放器
         function initializePlayer(videos) {
@@ -264,40 +381,36 @@ namespace Auxiliary.Elves.Client.Views
                 playVideo(0);
             }
             
-            // 设置播放速度为正常速度
             videoElement.playbackRate = 1.0;
             
             // 禁用键盘快捷键
-            videoElement.addEventListener('keydown', function(e) {
-                // 禁用空格键播放/暂停
-                if (e.code === 'Space') {
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space' || 
+                    e.code === 'ArrowLeft' || e.code === 'ArrowRight' || 
+                    e.code === 'ArrowUp' || e.code === 'ArrowDown' ||
+                    e.code === 'PageUp' || e.code === 'PageDown' ||
+                    e.code === 'Home' || e.code === 'End' ||
+                    e.code === 'KeyK' || e.code === 'KeyM' ||
+                    e.code === 'KeyF') {
                     e.preventDefault();
-                }
-                // 禁用方向键快进快退
-                if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || 
-                    e.code === 'ArrowUp' || e.code === 'ArrowDown') {
-                    e.preventDefault();
-                }
-                // 禁用PageUp/PageDown
-                if (e.code === 'PageUp' || e.code === 'PageDown') {
-                    e.preventDefault();
-                }
-                // 禁用Home/End键
-                if (e.code === 'Home' || e.code === 'End') {
-                    e.preventDefault();
+                    e.stopPropagation();
                 }
             });
             
-            // 禁用右键菜单
+            // 禁用右键菜单和拖拽
             videoElement.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 return false;
             });
             
-            // 禁用拖拽事件
             videoElement.addEventListener('dragstart', function(e) {
                 e.preventDefault();
                 return false;
+            });
+            
+            videoElement.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
             });
             
             // 监听来自WPF的消息
@@ -325,7 +438,6 @@ namespace Auxiliary.Elves.Client.Views
             currentVideoIndex = index;
             videoElement.src = videoList[index];
             
-            // 重置播放速度
             videoElement.playbackRate = 1.0;
             lastTime = 0;
             
@@ -334,15 +446,11 @@ namespace Auxiliary.Elves.Client.Views
             };
             
             videoElement.onended = () => {
-                // 视频播放完成，显示结算屏幕
                 showSettlementScreen();
             };
             
-            // 监听时间更新事件，防止快进
             videoElement.ontimeupdate = function() {
                 const currentTime = Math.floor(videoElement.currentTime);
-                
-                // 如果时间跳跃超过1秒，认为是快进操作，重置时间
                 if (currentTime > lastTime + 1) {
                     videoElement.currentTime = lastTime;
                 } else {
@@ -350,34 +458,24 @@ namespace Auxiliary.Elves.Client.Views
                 }
             };
             
-            // 监听快进尝试（拖拽进度条）
             videoElement.onseeking = function() {
-                // 立即重置到上一次有效的时间点
                 videoElement.currentTime = lastTime;
             };
             
-            // 监听播放速率变化
             videoElement.onratechange = function() {
                 if (videoElement.playbackRate !== 1.0) {
                     videoElement.playbackRate = 1.0;
                 }
             };
-            
-            // 禁用控制栏点击事件（特别是进度条区域）
-            videoElement.addEventListener('click', function(e) {
-                // 阻止进度条区域的点击事件
-                const controls = videoElement.controls;
-                if (controls) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, true);
         }
         
         // 显示结算屏幕
         function showSettlementScreen() {
             settlementScreen.style.display = 'flex';
-            successMessage.style.display = 'none';
+            completionScreen.style.display = 'none';
+            
+            // 开始代码雨效果
+            createMatrixRain();
             
             // 通知WPF开始结算任务
             window.chrome.webview.postMessage(JSON.stringify({
@@ -389,22 +487,17 @@ namespace Auxiliary.Elves.Client.Views
         // 处理结算结果
         function settlementResult(success) {
             if (success) {
-                // 显示成功消息
-                document.querySelector('.settlement-text').textContent = '结算完成！';
-                document.querySelector('.loading-spinner').style.display = 'none';
-                successMessage.style.display = 'block';
+                // 显示结算完成白屏
+                settlementScreen.style.display = 'none';
+                completionScreen.style.display = 'flex';
                 
                 // 2秒后播放下一个视频
                 setTimeout(() => {
-                    settlementScreen.style.display = 'none';
+                    completionScreen.style.display = 'none';
                     playVideo(currentVideoIndex + 1);
                 }, 2000);
             } else {
-                // 处理结算失败
-                document.querySelector('.settlement-text').textContent = '结算失败，请重试...';
-                document.querySelector('.loading-spinner').style.display = 'none';
-                
-                // 5秒后重试
+                // 结算失败，5秒后重试
                 setTimeout(() => {
                     settlementScreen.style.display = 'none';
                     playVideo(currentVideoIndex);
@@ -414,11 +507,9 @@ namespace Auxiliary.Elves.Client.Views
         
         // 初始化
         window.addEventListener('DOMContentLoaded', () => {
-            // 设置视频元素属性以禁用控制
-            videoElement.controlsList = 'nodownload noremoteplayback noplaybackrate nofullscreen';
+            videoElement.removeAttribute('controls');
             videoElement.disablePictureInPicture = true;
             
-            // 等待WebView2注入对象
             if (window.chrome && window.chrome.webview) {
                 window.chrome.webview.addEventListener('message', event => {
                     try {
