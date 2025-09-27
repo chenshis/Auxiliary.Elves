@@ -328,33 +328,40 @@ namespace Auxiliary.Elves.Client.ViewModels
                 _logger.LogInformation($"没有子视图，无法进行一键排列");
                 return;
             }
+
+
             _logger.LogInformation($"对当前子窗口进行一件排列，数量:{SessionViews.Count()}");
             // 获取主屏幕的工作区域（排除任务栏）
             var workingArea = System.Windows.SystemParameters.WorkArea;
 
             // 计算网格布局
-            int columns = (int)Math.Floor(workingArea.Width / 328);
+            int columns = (int)Math.Floor(workingArea.Width / 375);
             if (columns <= 0) columns = 1;
 
             int i = 0;
             foreach (var item in SessionViews)
             {
+                if (item.Value == null)
+                {
+                    continue;
+                }
+
                 int row = i / columns;
                 int col = i % columns;
 
-                double left = workingArea.Left + col * 328;
-                double top = workingArea.Top + row * 428;
+                double left = workingArea.Left + col * 375;
+                double top = workingArea.Top + row * 667;
 
                 // 确保窗口不会超出屏幕右边界
-                if (left + 328 > workingArea.Right)
+                if (left + 375 > workingArea.Right)
                 {
-                    left = workingArea.Right - 328;
+                    left = workingArea.Right - 375;
                 }
 
                 // 确保窗口不会超出屏幕底部
-                if (top + 428 > workingArea.Bottom)
+                if (top + 667 > workingArea.Bottom)
                 {
-                    top = workingArea.Bottom - 428;
+                    top = workingArea.Bottom - 667;
                 }
 
 
@@ -410,7 +417,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 {
                     foreach (var item in SessionViews)
                     {
-                        item.Value.Close();
+                        item.Value?.Close();
                     }
                     SessionViews.Clear();
                 }
