@@ -281,7 +281,9 @@ namespace Auxiliary.Elves.Client.ViewModels
             else
             {
                 _logger.LogInformation($"{m.AccountId}停止播放软件");
-                SessionViews[m].Stop();
+                SessionViews[m].Close();
+                SessionViews[m] = null;
+                m.Status = false;
             }
         }
 
