@@ -42,7 +42,7 @@
             Margin="10,0"
             VerticalAlignment="Center"
             FontSize="14"
-            Foreground="#888"
+            Foreground="White"
             Text="{Binding Title}" />
         <StackPanel Grid.Row="1" Margin="5,0,15,0">
             <!-- 带动画的错误提示 -->
