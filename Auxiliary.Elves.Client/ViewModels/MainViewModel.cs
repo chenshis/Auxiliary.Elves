@@ -309,7 +309,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 Growl.Warning("请检查网络连接是否正常");
                 return;
             }
-            SessionViews[m].Close();
+            SessionViews[m]?.Close();
             SessionViews.Remove(m);
             Accounts.Remove(m);
             if (Accounts == null || Accounts.Count() <= 0)
