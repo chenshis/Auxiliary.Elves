@@ -309,7 +309,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 Growl.Warning("请检查网络连接是否正常");
                 return;
             }
-            SessionViews[m].Close();
+            SessionViews[m]?.Close();
             SessionViews.Remove(m);
             Accounts.Remove(m);
             if (Accounts == null || Accounts.Count() <= 0)
@@ -424,8 +424,8 @@ namespace Auxiliary.Elves.Client.ViewModels
                     SessionViews.Clear();
                 }
                 // 优雅关闭服务器
-                //_webHost?.StopAsync().Wait(3000);
-                //_webHost?.Dispose();
+                _webHost?.StopAsync().Wait(3000);
+                _webHost?.Dispose();
                 _timer?.Stop();
             });
         }
@@ -442,7 +442,7 @@ namespace Auxiliary.Elves.Client.ViewModels
         {
             get => new DelegateCommand(async () =>
             {
-                //await StartHost();
+                await StartHost();
                 await GetAnnouncement();
                 await DataQuery();
             });
