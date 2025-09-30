@@ -25,7 +25,9 @@ namespace Auxiliary.Elves.Api.ApiService
             if (userEntity == null)
                 return false;
 
-            _dbContext.UserKeyEntities.Remove(userEntity);
+            userEntity.Isonline = false;
+
+            _dbContext.UserKeyEntities.Update(userEntity);
 
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
@@ -94,9 +96,8 @@ namespace Auxiliary.Elves.Api.ApiService
                     Isonline = user.Isonline,
                 };
 
-
                 DateTime expireDate;
-                expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
+                expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
                 userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
 
                 if (expireDate >= DateTime.Now)
@@ -122,14 +123,22 @@ namespace Auxiliary.Elves.Api.ApiService
 
             if (!string.IsNullOrWhiteSpace(userEntity.Userkeyip))
             {
-                if ((DateTime.Now - userEntity.Userkeylastdate.Value).Days > SystemConstant.MaxDay)
+                if ((DateTime.Now - userEntity.CreateTime).Days > SystemConstant.MaxDay)
                     return false;
 
-                if (!userEntity.Isonline && (DateTime.Now - userEntity.UpdateTime).Hours < SystemConstant.MaxHour)
+                if (userEntity.IsLock && (DateTime.Now - userEntity.Userkeylastdate.Value).Hours < SystemConstant.MaxHour)
                     return false;
 
                 if (userEntity.Userkeyip != accountRequest.Mac)
+                {
                     userEntity.Isonline = false;
+                    userEntity.IsLock = true;
+                }
+                else
+                {
+                    userEntity.Userkeylastdate = DateTime.Now;
+                    userEntity.Isonline = true;
+                }
             }
             else
             {
@@ -254,6 +263,8 @@ namespace Auxiliary.Elves.Api.ApiService
             keyEntity.Userkeyid = userKeyId;
             keyEntity.Userkey = userKey;
             keyEntity.Isonline = false;
+            keyEntity.IsLock = false;
+            keyEntity.CreateTime = DateTime.Now;
             _dbContext.UserKeyEntities.Add(keyEntity);
             var result = _dbContext.SaveChanges();
             return result > SystemConstant.Zero;

@@ -19,7 +19,7 @@
         <Style TargetType="Window">
             <Setter Property="Width" Value="328" />
             <Setter Property="Height" Value="268" />
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Background" Value="Black" />
             <Setter Property="WindowStyle" Value="SingleBorderWindow" />
             <Setter Property="ResizeMode" Value="NoResize" />
             <Setter Property="WindowChrome.WindowChrome">
@@ -42,7 +42,7 @@
             Margin="10,0"
             VerticalAlignment="Center"
             FontSize="14"
-            Foreground="#888"
+            Foreground="White"
             Text="{Binding Title}" />
         <StackPanel Grid.Row="1" Margin="5,0,15,0">
             <!-- 带动画的错误提示 -->
@@ -51,7 +51,7 @@
         Margin="10,10,0,0"
         Padding="8,5"
         CornerRadius="4"
-        Background="#FFFEF2F2"
+        Background="Black"
         BorderBrush="#FFE53935"
         BorderThickness="1"
         Opacity="0"
@@ -116,13 +116,6 @@
 
 
         </StackPanel>
-        <Border
-            Grid.Row="2"
-            Height="1"
-            Margin="15,0"
-            VerticalAlignment="Top"
-            BorderBrush="#ccc"
-            BorderThickness="1" />
         <UniformGrid
             Grid.Row="2"
             Margin="15,10,10,0"
@@ -150,13 +143,11 @@
                 hc:BackgroundSwitchElement.MouseDownBackground="#ccc"
                 hc:BackgroundSwitchElement.MouseHoverBackground="#ccc"
                 hc:BorderElement.CornerRadius="4"
-                Background="#DDD"
                 Command="{Binding CancelCommand}"
                 Content="取消"
                 Cursor="Hand"
                 FontSize="14"
-                Foreground="#666"
-                Style="{StaticResource ButtonCustom}" />
+                Style="{StaticResource ButtonDefault}" />
 
         </UniformGrid>
     </Grid>

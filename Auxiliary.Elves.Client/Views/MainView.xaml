@@ -10,12 +10,12 @@
     xmlns:prism="http://prismlibrary.com/"
     xmlns:vc ="clr-namespace:Auxiliary.Elves.Client.Converters"
     Title="辅助精灵"
-    Width="600"
+    Width="800"
     Height="600"
     prism:ViewModelLocator.AutoWireViewModel="True"
     FontFamily="Microsoft YaHei"
     FontWeight="ExtraLight"
-    Foreground="#333"
+    Foreground="White"
     WindowStartupLocation="CenterScreen"
     SnapsToDevicePixels="True" 
     UseLayoutRounding="True"
@@ -67,7 +67,7 @@
         <!-- 公告区域 -->
         <Border Grid.Row="0" CornerRadius="3">
             <hc:RunningBlock Content="{Binding Announcement}" 
-                             Speed="50" Margin="10,5" FontSize="16" FontWeight="Bold"/>
+                             Speed="50" Margin="10,5" FontSize="15" />
         </Border>
         <!-- 主内容区域 -->
         <Grid Grid.Row="1">
@@ -96,13 +96,13 @@
 
             <!-- 数据列表或空状态 -->
             <Border Grid.Row="1" Margin="10,0,10,10" BorderThickness="1" 
-                    BorderBrush="{DynamicResource BorderBrush}" CornerRadius="0,0,5,5">
+                   CornerRadius="0,0,5,5">
                 <Grid>
                     <ItemsControl ItemsSource="{Binding Accounts}" Visibility="{Binding HasData, Converter={StaticResource Boolean2VisibilityConverter}}">
                         <ItemsControl.Resources>
                             <Style x:Key="tbItem" TargetType="TextBlock">
                                 <Setter Property="FontFamily" Value="Microsoft YaHei"/>
-                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="Foreground" Value="White"/>
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="FontSize" Value="12"/>
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -118,7 +118,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,3">
-                                    <Grid>
+                                    <Grid Margin="0,0,0,5">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="2*"/>
                                             <ColumnDefinition Width="2*"/>

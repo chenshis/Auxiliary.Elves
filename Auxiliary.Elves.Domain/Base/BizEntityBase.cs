@@ -26,7 +26,7 @@ namespace Auxiliary.Elves.Domain.Base
         public virtual DateTime UpdateTime { get; set; } = DateTime.Now;
 
         [Column(TypeName = "datetime")]
-        public virtual DateTime CreateTime { get; set; } = DateTime.Now;
+        public virtual DateTime CreateTime { get; set; }
 
         public object[] GetKeys()
         {
