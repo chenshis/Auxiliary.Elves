@@ -12,11 +12,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
+using Newtonsoft.Json;
 
 namespace Auxiliary.Elves.Client.Views
 {
     public partial class SessionView : HandyControl.Controls.Window
     {
+        private readonly Random _random = new Random();
+        private bool _isWebViewReady = false;
+
         public SessionView()
         {
             InitializeComponent();
@@ -49,12 +53,11 @@ namespace Auxiliary.Elves.Client.Views
                 var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
                 await webView.EnsureCoreWebView2Async(env);
                 // 初始化WebView2
-                webView.NavigationCompleted += async (sender, e) => await WebView_NavigationCompleted(sender, e);
                 webView.WebMessageReceived += WebView_WebMessageReceived;
-                webView.Source = new Uri(System.IO.Path.GetFullPath("video_player.html"));
-                await webView.EnsureCoreWebView2Async();
+
                 webView.NavigateToString(HtmlContent);
-                webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
+                _isWebViewReady = true;
+                viewModel.RecordInfo("WebView2初始化完成，等待页面就绪");
 
             }
             catch (Exception ex)
@@ -78,18 +81,7 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private async Task WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
-        {
-            var webView = sender as WebView2;
-            if (webView != null && webView.CoreWebView2 != null)
-            {
-                var viewModel = this.DataContext as SessionViewModel;
-                var videoAddress = await viewModel.GetVideoAddressAsync();
-                string[] videos = { videoAddress };
-                string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
-                await webView.ExecuteScriptAsync(script);
-            }
-        }
+
 
         private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
@@ -98,24 +90,33 @@ namespace Auxiliary.Elves.Client.Views
 
             try
             {
+                var viewModel = this.DataContext as SessionViewModel;
                 var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(message);
                 string action = data.action.ToString();
-
-                if (action == "settlementComplete")
+                if (action == "pageReady")
                 {
-                    var viewModel = this.DataContext as SessionViewModel;
+                    await SendNextVideo(); // 发送第一个视频
+                }
+                else if (action == "settlementComplete")
+                {
+
                     // 执行结算任务
                     var success = await viewModel.UpdatePoints();
-                    await Task.Delay(2000);
+                    var nextSec = _random.Next(10, 20);
+                    viewModel.RecordInfo($"{viewModel.Account.AccountId} :等待时间:{nextSec}");
+                    await Task.Delay(TimeSpan.FromSeconds(nextSec));
                     // 通知WebView结算结果
                     string resultScript = $"settlementResult({success.ToString().ToLower()});";
                     await webView?.ExecuteScriptAsync(resultScript);
                     // 设置初始视频列表
-
-                    var videoAddress = await viewModel.GetVideoAddressAsync();
-                    string[] videos = { videoAddress };
-                    string script = $"initializePlayer({Newtonsoft.Json.JsonConvert.SerializeObject(videos)});";
-                    await webView.ExecuteScriptAsync(script);
+                    await SendNextVideo(); // 发送第一个视频
+                }
+                else if (action == "videoError")
+                {
+                    viewModel.RecordInfo($"视频播放错误: {data.error}");
+                    // 出错时重试下一个视频
+                    await Task.Delay(1000);
+                    await SendNextVideo();
                 }
             }
             catch (Exception ex)
@@ -123,18 +124,91 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
+        private async Task SendNextVideo()
+        {
+            if (!_isWebViewReady) return;
+
+            var viewModel = this.DataContext as SessionViewModel;
+            try
+            {
+                var videoAddress = await viewModel.GetVideoAddressAsync();
+                if (!string.IsNullOrEmpty(videoAddress))
+                {
+                    SendLoadVideoCommand(videoAddress);
+                    viewModel.RecordInfo($"发送视频地址: {videoAddress}");
+                }
+                else
+                {
+                    viewModel.RecordInfo("获取视频地址为空");
+                }
+            }
+            catch (Exception ex)
+            {
+                viewModel.RecordError(ex, "获取视频地址失败");
+            }
+        }
+
+        private void SendLoadVideoCommand(string videoUrl)
+        {
+            if (!_isWebViewReady) return;
+
+            try
+            {
+                var message = new { action = "loadVideo", videoUrl = videoUrl };
+                SendMessageToWebView(message);
+            }
+            catch (Exception ex)
+            {
+                var viewModel = this.DataContext as SessionViewModel;
+                viewModel?.RecordError(ex, "发送loadVideo命令失败");
+            }
+        }
+
+        private void SendSettlementResult(bool success)
+        {
+            if (!_isWebViewReady) return;
+
+            try
+            {
+                var message = new { action = "settlementResult", success = success };
+                SendMessageToWebView(message);
+            }
+            catch (Exception ex)
+            {
+                var viewModel = this.DataContext as SessionViewModel;
+                viewModel?.RecordError(ex, "发送结算结果失败");
+            }
+        }
+
+        private void SendMessageToWebView(object message)
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(message);
+                webView.CoreWebView2.PostWebMessageAsString(json);
+            }
+            catch (Exception ex)
+            {
+                var viewModel = this.DataContext as SessionViewModel;
+                viewModel?.RecordError(ex, "发送消息到WebView失败");
+            }
+        }
 
         public void Start()
         {
-            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"start\"}");
+            if (_isWebViewReady)
+            {
+                SendMessageToWebView(new { action = "start" });
+            }
         }
-
 
         public void Stop()
         {
-            webView.CoreWebView2.PostWebMessageAsString("{\"action\":\"stop\"}");
+            if (_isWebViewReady)
+            {
+                SendMessageToWebView(new { action = "stop" });
+            }
         }
-
         public string HtmlContent { get; set; } =
  @"<!DOCTYPE html>
 <html>
@@ -286,89 +360,17 @@ namespace Auxiliary.Elves.Client.Views
             animation: spin 1s ease-in-out infinite;
             margin: 0 auto 20px;
         }
-    
-        .progress-container {
-            width: 300px;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-    
-        .progress-bar {
-            height: 100%;
-            background: #0078d4;
-            border-radius: 3px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-    
-        .progress-text {
-            font-size: 14px;
-            color: #666;
-            margin-top: 10px;
-        }
-
-        .completion-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #fff;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 400;
-        }
-    
-        .completion-loading {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #000;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        .completion-text {
-            font-size: 18px;
-            color: #333;
-            margin-top: 20px;
-            font-family: 'Microsoft YaHei', sans-serif;
-        }
-
-        .preload-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #cccccc;
-            background: rgba(0, 0, 0, 0.2);
-            opacity: 0.7;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 12px;
-            display: none;
-            z-index: 100;
-        }
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""video-container"">
-            <video id=""videoPlayer"" preload=""auto""></video>
-            <div class=""preload-indicator"" id=""preloadIndicator"">加载中...</div>
+            <video id=""videoPlayer"" preload=""auto"" autoplay muted></video>
         
             <div class=""loading-screen"" id=""loadingScreen"">
                 <div class=""loading-content"">
                     <div class=""loading-spinner-white""></div>
-                    <div class=""loading-title"">视频加载中...</div>
-                    <div class=""progress-container"">
-                        <div class=""progress-bar"" id=""progressBar""></div>
-                    </div>
-                    <div class=""progress-text"" id=""progressText"">0%</div>
+                    <div class=""loading-title"">正在获取任务...</div>
                 </div>
             </div>
         
@@ -379,29 +381,17 @@ namespace Auxiliary.Elves.Client.Views
                     <div class=""loading-spinner""></div>
                 </div>
             </div>
-        
-            <div class=""completion-screen"" id=""completionScreen"">
-                <div class=""completion-loading""></div>
-                <div class=""completion-text"">任务完成</div>
-            </div>
         </div>
     </div>
 
     <script>
         let videoElement = document.getElementById('videoPlayer');
         let settlementScreen = document.getElementById('settlementScreen');
-        let completionScreen = document.getElementById('completionScreen');
         let loadingScreen = document.getElementById('loadingScreen');
         let matrixRain = document.getElementById('matrixRain');
-        let preloadIndicator = document.getElementById('preloadIndicator');
-        let progressBar = document.getElementById('progressBar');
-        let progressText = document.getElementById('progressText');
     
         let currentVideoUrl = null;
-        let lastTime = 0;
-        let currentBlobUrl = null;
         let isVideoLoaded = false;
-        let lastProgressPercent = 0; // 新增：记录上次进度百分比
 
         const chars = 'abcdefghijklmnopqrstuvwxyz';
     
@@ -451,107 +441,25 @@ namespace Auxiliary.Elves.Client.Views
             }, (duration + delay) * 1000);
         }
 
-        function updateProgress(percent) {
-            // 修复：确保进度条只前进不后退
-            if (percent > lastProgressPercent) {
-                lastProgressPercent = percent;
-                progressBar.style.width = percent + '%';
-                progressText.textContent = percent.toFixed(1) + '%';
-            }
-        }
-
         function showLoadingScreen() {
             loadingScreen.style.display = 'flex';
-            lastProgressPercent = 0; // 重置进度记录
-            progressBar.style.width = '0%';
-            progressText.textContent = '0%';
         }
 
         function hideLoadingScreen() {
             loadingScreen.style.display = 'none';
         }
 
-        function loadSingleVideo(url) {
-            return new Promise((resolve, reject) => {
-                cleanupCurrentBlobUrl();
-                isVideoLoaded = false;
-                
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', url, true);
-                xhr.responseType = 'blob';
-            
-                xhr.onprogress = function(event) {
-                    if (event.lengthComputable) {
-                        const percent = (event.loaded / event.total) * 100;
-                        updateProgress(percent);
-                    }
-                };
-            
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        const blob = xhr.response;
-                        currentBlobUrl = URL.createObjectURL(blob);
-                        updateProgress(100); // 确保显示100%
-                        resolve(currentBlobUrl);
-                    } else {
-                        reject(new Error('视频加载失败'));
-                    }
-                };
-            
-                xhr.onerror = function() {
-                    reject(new Error('网络错误'));
-                };
-            
-                xhr.send();
-            });
-        }
-
-        function initializePlayer(videoUrl) {
-            currentVideoUrl = videoUrl;
-            
+        function initializePlayer() {
             videoElement.removeAttribute('controls');
             videoElement.disablePictureInPicture = true;
             videoElement.preload = ""auto"";
             videoElement.playbackRate = 1.0;
         
-            document.addEventListener('keydown', function(e) {
-                if (e.code === 'Space' || 
-                    e.code === 'ArrowLeft' || e.code === 'ArrowRight' || 
-                    e.code === 'ArrowUp' || e.code === 'ArrowDown' ||
-                    e.code === 'PageUp' || e.code === 'PageDown' ||
-                    e.code === 'Home' || e.code === 'End' ||
-                    e.code === 'KeyK' || e.code === 'KeyM' ||
-                    e.code === 'KeyF') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            });
-        
-            videoElement.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-        
-            videoElement.addEventListener('dragstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-        
+            // 监听消息
             window.chrome.webview.addEventListener('message', event => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.action === 'start') {
-                        console.log('收到开始播放命令');
-                        if (isVideoLoaded) {
-                            videoElement.play().catch(e => {
-                                console.log('播放被阻止:', e);
-                            });
-                        }
-                    } else if (data.action === 'stop') {
-                        console.log('收到停止播放命令');
-                        videoElement.pause();
-                        cleanupCurrentBlobUrl();
-                    } else if (data.action === 'loadVideo') {
+                    if (data.action === 'loadVideo') {
                         console.log('收到加载视频命令:', data.videoUrl);
                         if (data.videoUrl) {
                             loadAndPlayVideo(data.videoUrl);
@@ -564,10 +472,6 @@ namespace Auxiliary.Elves.Client.Views
                     console.error('Error parsing message:', e);
                 }
             });
-            
-            if (currentVideoUrl) {
-                loadAndPlayVideo(currentVideoUrl);
-            }
         }
     
         async function loadAndPlayVideo(videoUrl) {
@@ -582,14 +486,17 @@ namespace Auxiliary.Elves.Client.Views
             try {
                 showLoadingScreen();
                 console.log('开始加载视频:', videoUrl);
-            
-                const finalVideoUrl = await loadSingleVideo(videoUrl);
                 
-                videoElement.src = finalVideoUrl;
-                lastTime = 0;
+                // 添加1秒延迟，避免加载太快
+                console.log('等待1秒避免加载太快...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log('延迟结束，开始设置视频源');
+            
+                // 直接设置视频源，不通过blob转换
+                videoElement.src = videoUrl;
             
                 videoElement.onloadeddata = () => {
-                    console.log('视频加载完成，准备播放');
+                    console.log('视频加载完成，开始播放');
                     isVideoLoaded = true;
                     
                     hideLoadingScreen();
@@ -598,11 +505,11 @@ namespace Auxiliary.Elves.Client.Views
                         videoUrl: currentVideoUrl
                     });
                     
+                    // 强制播放
                     videoElement.play().catch(e => {
                         console.log('自动播放被阻止:', e);
-                        notifyWPF('playbackBlocked', {
-                            error: e.message
-                        });
+                        // 如果自动播放失败，显示控件让用户点击
+                        videoElement.controls = true;
                     });
                 };
             
@@ -620,25 +527,6 @@ namespace Auxiliary.Elves.Client.Views
                         videoUrl: currentVideoUrl
                     });
                 };
-            
-                videoElement.ontimeupdate = function() {
-                    const currentTime = Math.floor(videoElement.currentTime);
-                    if (currentTime > lastTime + 1) {
-                        videoElement.currentTime = lastTime;
-                    } else {
-                        lastTime = currentTime;
-                    }
-                };
-            
-                videoElement.onseeking = function() {
-                    videoElement.currentTime = lastTime;
-                };
-            
-                videoElement.onratechange = function() {
-                    if (videoElement.playbackRate !== 1.0) {
-                        videoElement.playbackRate = 1.0;
-                    }
-                };
 
             } catch (error) {
                 console.error('视频加载失败:', error);
@@ -654,7 +542,6 @@ namespace Auxiliary.Elves.Client.Views
         function showSettlementScreen() {
             console.log('显示结算屏幕');
             settlementScreen.style.display = 'flex';
-            completionScreen.style.display = 'none';
             loadingScreen.style.display = 'none';
         
             createMatrixRain();
@@ -669,35 +556,17 @@ namespace Auxiliary.Elves.Client.Views
             
             if (success) {
                 settlementScreen.style.display = 'none';
-                completionScreen.style.display = 'flex';
-            
-                setTimeout(() => {
-                    completionScreen.style.display = 'none';
-                    cleanupCurrentBlobUrl();
-                    notifyWPF('VideoEnd', {
-                        videoUrl: currentVideoUrl
-                    });
-                }, 1000);
+                notifyWPF('VideoEnd', {
+                    videoUrl: currentVideoUrl
+                });
             } else {
                 setTimeout(() => {
                     settlementScreen.style.display = 'none';
                     console.log('结算失败，重新播放视频');
-                    if (isVideoLoaded) {
-                        videoElement.currentTime = 0;
-                        videoElement.play();
-                    } else {
+                    if (currentVideoUrl) {
                         loadAndPlayVideo(currentVideoUrl);
                     }
                 }, 5000);
-            }
-        }
-    
-        function cleanupCurrentBlobUrl() {
-            if (currentBlobUrl) {
-                URL.revokeObjectURL(currentBlobUrl);
-                currentBlobUrl = null;
-                isVideoLoaded = false;
-                console.log('已清理视频资源');
             }
         }
     
@@ -716,8 +585,7 @@ namespace Auxiliary.Elves.Client.Views
         }
     
         window.addEventListener('DOMContentLoaded', () => {
-            window.addEventListener('beforeunload', cleanupCurrentBlobUrl);
-        
+            initializePlayer();
             setTimeout(() => {
                 notifyWPF('pageReady', {});
             }, 100);

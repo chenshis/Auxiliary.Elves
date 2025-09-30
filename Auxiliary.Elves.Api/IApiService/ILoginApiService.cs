@@ -3,6 +3,7 @@ using Auxiliary.Elves.Infrastructure.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +11,11 @@ namespace Auxiliary.Elves.Api.IApiService
 {
     public interface ILoginApiService
     {
+        /// <summary>
+        /// 获取所有用户信息
+        /// </summary>
+        /// <returns></returns>
+        List<AccountUserDto> GetAllUser();
         /// <summary>
         /// 登录
         /// </summary>
@@ -22,8 +28,26 @@ namespace Auxiliary.Elves.Api.IApiService
         /// 用户注册
         /// </summary>
         /// <param name="userFeatureCode">特征码</param>
+        /// <param name="userFeatureCode">邀请人账号</param>
         /// <returns></returns>
-        AccountUserDto Register(string userFeatureCode);
+        bool Register(string userFeatureCode, string userInviteUserName);
+
+        /// <summary>
+        /// 绑定谷歌
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌账号</param>
+        /// <returns></returns>
+        bool BindGoogle(string userName, string userId);
+
+
+        /// <summary>
+        /// 用户设置是否有效
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌密钥</param>
+        /// <returns></returns>
+        bool SetEnableStatus(string userName, bool isEnable);
 
         /// <summary>
         /// 生成卡密
@@ -34,11 +58,10 @@ namespace Auxiliary.Elves.Api.IApiService
         bool RegisterKey(string userId,string verCode);
 
         /// <summary>
-        /// 根据账号查询卡密信息
+        /// 获取所有用户卡密信息
         /// </summary>
-        /// <param name="userName">用户名</param>
         /// <returns></returns>
-        List<UserDto> GetAllUser(string userName, bool enabled);
+        List<UserDto> GetAllUserKey();
 
         /// <summary>
         /// 根据mac查询所有卡密

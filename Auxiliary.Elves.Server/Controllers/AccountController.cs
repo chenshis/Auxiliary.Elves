@@ -2,6 +2,7 @@
 using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore.Mvc;
+using NLog.Web.LayoutRenderers;
 
 namespace Auxiliary.Elves.Server.Controllers
 {
@@ -27,17 +28,56 @@ namespace Auxiliary.Elves.Server.Controllers
         }
 
         /// <summary>
-        /// 注册
+        /// 获取所有用户信息
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserRoute)]
+        public List<AccountUserDto> GetAllUser()
+        {
+            return LoginApiService.GetAllUser();
+        }
+
+        /// <summary>
+        /// 用户注册
         /// </summary>
         /// <param name="userFeatureCode">特征码</param>
+        /// <param name="userInviteUserName">邀请人账号</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterRoute)]
-        public AccountUserDto Register([FromBody] string userFeatureCode)
+        public bool Register(string userFeatureCode,string userInviteUserName="")
         {
-            return LoginApiService.Register(userFeatureCode);
+            return LoginApiService.Register(userFeatureCode, userInviteUserName);
         }
 
+        /// <summary>
+        /// 用户绑定谷歌
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌密钥</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.BindGoogleRoute)]
+        public bool BindGoogleRoute(string userName,string userId)
+        {
+            return LoginApiService.BindGoogle(userName, userId);
+        }
+
+        /// <summary>
+        /// 用户设置是否有效
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌密钥</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.SetEnableStatusRoute)]
+        public bool SetEnableStatus(string userName, bool isEnable)
+        {
+            return LoginApiService.SetEnableStatus(userName, isEnable);
+        }
+
+        
         /// <summary>
         /// 生成卡密
         /// </summary>
@@ -52,17 +92,16 @@ namespace Auxiliary.Elves.Server.Controllers
         }
 
         /// <summary>
-        /// 根据账号查询卡密信息
+        /// 获取所有用户卡信息
         /// </summary>
-        /// <param name="userName">账号</param>
-        /// <param name="enabled">是否启用</param>
         /// <returns></returns>
         [HttpPost]
-        [Route(SystemConstant.UserRoute)]
-        public List<UserDto> GetAllUser(string userName,bool enabled)
+        [Route(SystemConstant.UserKeyRoute)]
+        public List<UserDto> GetAllUserKey()
         {
-            return LoginApiService.GetAllUser(userName, enabled);
+            return LoginApiService.GetAllUserKey();
         }
+
 
         /// <summary>
         /// 找回账号
@@ -104,5 +143,6 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.GetMacAllUser(mac);
         }
 
+      
     }
 }

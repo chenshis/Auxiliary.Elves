@@ -15,21 +15,36 @@ namespace Auxiliary.Elves.Domain.Entities
         /// <summary>
         /// 编码,;
         /// </summary>
-        public string Userid { get; set; }
+        public string UserId { get; set; }
 
         /// <summary>
         /// 特征码,;
         /// </summary>
-        public string Userfeaturecode { get; set; }
+        public string UserFeatureCode { get; set; }
 
         /// <summary>
         /// 账号,;
         /// </summary>
-        public string Username { get; set; }
+        public string UserName { get; set; }
 
         /// <summary>
         /// 备用数字,;
         /// </summary>
-        public string Userbakckupnumber { get; set; }
+        public string UserBakckupNumber { get; set; }
+
+        /// <summary>
+        /// 绑定谷歌账号
+        /// </summary>
+        public string UserBindAccount { get; set; }
+
+        /// <summary>
+        /// 邀请人账号
+        /// </summary>
+        public string UserInviteUserName { get; set; }
+
+        /// <summary>
+        /// 是否启用
+        /// </summary>
+        public bool IsEnable { get; set; }
     }
 }

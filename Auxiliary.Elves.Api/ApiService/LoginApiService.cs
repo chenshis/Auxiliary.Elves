@@ -3,6 +3,7 @@ using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using System.Runtime.InteropServices;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -32,15 +33,12 @@ namespace Auxiliary.Elves.Api.ApiService
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
 
-        public List<UserDto> GetAllUser(string userName, bool enabled)
+        public List<UserDto> GetAllUserKey()
         {
             var userDtos = new List<UserDto>(); 
 
-            if (string.IsNullOrWhiteSpace(userName))
-                return userDtos;
-
-            var userEntities = _dbContext.UserKeyEntities.Where(t => t.Userid == userName&&
-             (enabled ? t.Userkeylastdate != null : t.Userkeylastdate == null)).ToList();
+          
+            var userEntities = _dbContext.UserKeyEntities.ToList();
 
             if(!userEntities.Any())
                 return userDtos;
@@ -57,14 +55,12 @@ namespace Auxiliary.Elves.Api.ApiService
                     Isonline = user.Isonline
                 };
 
-                if (user.Isonline)
+                if (!string.IsNullOrWhiteSpace(user.Userkeyip))
                 {
-                    if (!string.IsNullOrWhiteSpace(user.Userkeyip))
-                    {
-                        DateTime expireDate = user.UpdateTime.AddDays(SystemConstant.MaxDay);
-                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
-                    }
+                    DateTime expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
+                    userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
                 }
+
                 userDtos.Add(userInfo);
             }
 
@@ -107,6 +103,34 @@ namespace Auxiliary.Elves.Api.ApiService
           
             return userDtos;
         }
+
+        public List<AccountUserDto> GetAllUser()
+        {
+            var userDtos = new List<AccountUserDto>();
+
+            var userEntity = _dbContext.UserEntities;
+
+            var userEntityKey = _dbContext.UserKeyEntities.ToList();
+
+            foreach (var user in userEntity)
+            {
+                var userKeyCount = userEntityKey.Count(t => t.Userid == user.UserName);
+
+                userDtos.Add(new AccountUserDto
+                {
+                    Userid = user.UserId,
+                    UserName = user.UserName,
+                    Userfeaturecode = user.UserFeatureCode,
+                    Userbakckupnumber = user.UserBakckupNumber,
+                    CreateTime = user.CreateTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    IsEnable = user.IsEnable,
+                    UserNumber = userKeyCount
+                });
+            }
+
+            return userDtos;
+        }
+
 
         public bool Login(AccountRequestDto accountRequest)
         {
@@ -164,23 +188,23 @@ namespace Auxiliary.Elves.Api.ApiService
             if (!isAuthenticator)
                 return "";
 
-            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userid == userId);
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserId == userId);
 
             if (userEntity == null)
                 return "";
 
-            return userEntity.Username;
+            return userEntity.UserName;
         }
 
-        public AccountUserDto Register(string userFeatureCode)
+        public bool Register(string userFeatureCode,string userInviteUserName)
         {
             if (string.IsNullOrWhiteSpace(userFeatureCode))
-                return new AccountUserDto();
+                return false;
 
-            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userfeaturecode == userFeatureCode);
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserFeatureCode == userFeatureCode);
 
             if (userEntity != null)
-                return new AccountUserDto();
+                return false;
 
             Random _rnd = new Random();
             HashSet<string> _used = new HashSet<string>();
@@ -193,8 +217,8 @@ namespace Auxiliary.Elves.Api.ApiService
 
             foreach (var item in _dbContext.UserEntities.ToList())
             {
-                _used.Add(item.Username);
-                _usedNumber.Add(item.Userbakckupnumber);
+                _used.Add(item.UserName);
+                _usedNumber.Add(item.UserBakckupNumber);
             }
 
             do
@@ -208,16 +232,71 @@ namespace Auxiliary.Elves.Api.ApiService
             } while (!_usedNumber.Add(userNumber)); // HashSet 保证唯一
 
             UserEntity user = new UserEntity();
-            user.Userid = GoogleAuthenticatorHelper.GenerateSecretKey(userName);
-            user.Userfeaturecode = userFeatureCode;
-            user.Username = userName;
-            user.Userbakckupnumber = userNumber;
+            user.UserId ="";
+            user.UserFeatureCode = userFeatureCode;
+            user.UserName = userName;
+            user.UserBakckupNumber = userNumber;
+            user.IsEnable = true;
+            user.UserBindAccount = GoogleAuthenticatorHelper.GenerateSecretKey(userName);
+            user.UserInviteUserName = userInviteUserName;
             _dbContext.UserEntities.Add(user);
 
             var result = _dbContext.SaveChanges();
-            return result > SystemConstant.Zero ? new AccountUserDto() {
-                Userid=user.Userid,
-                UserName=userName} : new AccountUserDto();
+            return result > SystemConstant.Zero;
+        }
+
+
+
+        /// <summary>
+        /// 绑定谷歌
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌账号</param>
+        /// <returns></returns>
+        public bool BindGoogle(string userName, string userId) 
+        {
+            if (string.IsNullOrWhiteSpace(userName)||string.IsNullOrWhiteSpace(userId))
+                return false;
+
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName);
+
+            if (userEntity == null || !string.IsNullOrWhiteSpace(userEntity.UserId))
+                return false;
+
+            userEntity.UserId = userId;
+
+            _dbContext.UserEntities.Update(userEntity);
+
+            var result = _dbContext.SaveChanges();
+
+            return result > SystemConstant.Zero;
+        }
+
+
+
+        /// <summary>
+        /// 用户设置是否有效
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userId">谷歌密钥</param>
+        /// <returns></returns>
+        public bool SetEnableStatus(string userName, bool isEnable)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return false;
+
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName);
+
+            if (userEntity == null)
+                return false;
+
+            userEntity.IsEnable = isEnable;
+
+            _dbContext.UserEntities.Update(userEntity);
+
+            var result = _dbContext.SaveChanges();
+
+            return result > SystemConstant.Zero;
         }
 
         public bool RegisterKey(string userId, string verCode)
@@ -227,7 +306,7 @@ namespace Auxiliary.Elves.Api.ApiService
             if (!isAuthenticator)
                 return false;
 
-            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.Userid == userId);
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserId == userId && x.IsEnable == true);
 
             if (userEntity == null)
                 return false;
@@ -259,7 +338,7 @@ namespace Auxiliary.Elves.Api.ApiService
             } while (!_used.Add(userKey));
 
             UserKeyEntity keyEntity = new UserKeyEntity();
-            keyEntity.Userid = userEntity.Username;
+            keyEntity.Userid = userEntity.UserName;
             keyEntity.Userkeyid = userKeyId;
             keyEntity.Userkey = userKey;
             keyEntity.Isonline = false;

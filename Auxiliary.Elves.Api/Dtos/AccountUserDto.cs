@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Auxiliary.Elves.Api.Dtos
+﻿namespace Auxiliary.Elves.Api.Dtos
 {
     public class AccountUserDto
     {
@@ -17,5 +11,35 @@ namespace Auxiliary.Elves.Api.Dtos
         /// 账号
         /// </summary>
         public string UserName { get; set; }
+
+        /// <summary>
+        /// 特征码
+        /// </summary>
+        public string Userfeaturecode { get; set; }
+
+        /// <summary>
+        /// 备用数字
+        /// </summary>
+        public string Userbakckupnumber { get; set; }
+
+        /// <summary>
+        /// 注册时间
+        /// </summary>
+        public string CreateTime { get; set; }
+
+        /// <summary>
+        /// 有效卡数
+        /// </summary>
+        public int UserNumber { get; set; }
+
+        /// <summary>
+        /// 是否启用
+        /// </summary>
+        public bool IsEnable { get; set; }
+
+        ///// <summary>
+        ///// 绑定谷歌账号
+        ///// </summary>
+        //public string UserBindAccount { get; set; }
     }
 }

@@ -91,6 +91,16 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string RegisterRoute = "v1/auxiliary/account/register";
 
         /// <summary>
+        /// 绑定谷歌
+        /// </summary>
+        public const string BindGoogleRoute = "v1/auxiliary/account/binggoogle";
+
+        /// <summary>
+        /// 设置用户账号状态
+        /// </summary>
+        public const string SetEnableStatusRoute = "v1/auxiliary/account/setenablestatus";
+
+        /// <summary>
         /// 注册卡密路由
         /// </summary>
         public const string RegisterKeyRoute = "v1/auxiliary/account/registerkey";
@@ -99,6 +109,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 用户信息
         /// </summary>
         public const string UserRoute = "v1/auxiliary/account/queryuser";
+
+        /// <summary>
+        /// 用户卡密信息
+        /// </summary>
+        public const string UserKeyRoute = "v1/auxiliary/account/queryuserkey";
 
         /// <summary>
         /// 找回账号
