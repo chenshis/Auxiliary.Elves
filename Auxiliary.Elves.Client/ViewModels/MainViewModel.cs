@@ -442,10 +442,26 @@ namespace Auxiliary.Elves.Client.ViewModels
         {
             get => new DelegateCommand(async () =>
             {
-                await StartHost();
+                //await StartHost();
+                await SetToken();
                 await GetAnnouncement();
                 await DataQuery();
             });
+        }
+
+        private async Task SetToken()
+        {
+            var tokenResponse = await _httpClient.PostAsync<string>(string.Concat(SystemConstant.LoginKeyRoute, "?key=admin"));
+
+            if (tokenResponse.Code == 0 && tokenResponse.Data != null)
+            {
+                _httpClient.SetToken(tokenResponse.Data.ToString());
+                _logger.LogInformation($"token读取成功");
+            }
+            else
+            {
+                _logger.LogError($"获取token失败");
+            }
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using Auxiliary.Elves.Infrastructure.Config;
+using IdentityModel.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -23,70 +24,6 @@ namespace Auxiliary.Elves.Client
             this._httpClient.BaseAddress = new Uri(SystemConstant.ServerUrl);
         }
 
-        //public AuxElvesHttpClient SetToken(string token)
-        //{
-        //    this._httpClient.SetBearerToken(token);
-        //    return this;
-        //}
-        public async Task<ApiResponse<TData>> GetAsync<TData>(string route)
-        {
-            try
-            {
-                HttpResponseMessage responseMessage = await _httpClient.GetAsync(route);
-                var responseResult = GetResponseCodeResult<TData>(responseMessage);
-                return responseResult;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Get请求异常：{ex.Message}");
-                var apiResponse = new ApiResponse<TData>();
-                apiResponse.Code = 1;
-                apiResponse.Msg = ex.Message;
-                apiResponse.Data = default(TData);
-                apiResponse.ServerTime = DateTime.Now.Ticks;
-                return apiResponse;
-            }
-        }
-
-
-        public ApiResponse<TData> Get<TData>(string route)
-        {
-            try
-            {
-                HttpResponseMessage responseMessage = _httpClient.GetAsync(route).Result;
-                var responseResult = GetResponseCodeResult<TData>(responseMessage);
-                // 未授权 但是有token 则刷新token
-                if (responseResult.Code == (int)System.Net.HttpStatusCode.Unauthorized)
-                {
-                    var refreshResponse = RefreshToken();
-                    if (refreshResponse.Code != 0)
-                    {
-                        _logger.LogError($"Get请求异常：{refreshResponse.Msg}");
-                        return responseResult;
-                    }
-                    responseMessage = _httpClient.GetAsync(route).Result;
-                    responseResult = GetResponseCodeResult<TData>(responseMessage);
-                    if (responseResult.Code != 0)
-                    {
-                        _logger.LogError($"Get请求异常：{refreshResponse.Msg}");
-                        responseResult.Code = 1;
-                    }
-                }
-                return responseResult;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Get请求异常：{ex.Message}");
-                var apiResponse = new ApiResponse<TData>();
-                apiResponse.Code = 1;
-                apiResponse.Msg = ex.Message;
-                apiResponse.Data = default(TData);
-                apiResponse.ServerTime = DateTime.Now.Ticks;
-                return apiResponse;
-            }
-        }
-
-
         public async Task<ApiResponse<TData>> PostAsync<TData>(string route)
         {
             return await PostAsync<int, TData>(route, 0);
@@ -103,6 +40,23 @@ namespace Auxiliary.Elves.Client
             {
                 HttpResponseMessage responseMessage = await _httpClient.PostAsync(route, stringContent);
                 var responseResult = GetResponseCodeResult<TData>(responseMessage);
+                // 未授权 但是有token 则刷新token
+                if (responseResult.Code == (int)System.Net.HttpStatusCode.Unauthorized)
+                {
+                    var refreshResponse = RefreshToken();
+                    if (refreshResponse.Code != 0)
+                    {
+                        _logger.LogError($"Post请求异常：{refreshResponse.Msg}");
+                        return responseResult;
+                    }
+                    responseMessage = await _httpClient.PostAsync(route, stringContent);
+                    responseResult = GetResponseCodeResult<TData>(responseMessage);
+                    if (responseResult.Code != 0)
+                    {
+                        _logger.LogError($"Post请求异常：{responseResult.Msg}");
+                        responseResult.Code = 1;
+                    }
+                }
                 return responseResult;
             }
             catch (Exception ex)
@@ -143,12 +97,12 @@ namespace Auxiliary.Elves.Client
                     apiResponse = GetResponseCodeResult<string>(responseMessage);
                     if (apiResponse.Code == 0)
                     {
-                        //SetToken(apiResponse.Data.ToString());
+                        SetToken(apiResponse.Data.ToString());
                     }
                     else
                     {
                         apiResponse.Code = 1;
-                        //SetToken("");
+                        SetToken("");
                     }
                 }
                 catch (Exception ex)
@@ -163,6 +117,11 @@ namespace Auxiliary.Elves.Client
 
             }
             return apiResponse;
+        }
+        public AuxElvesHttpClient SetToken(string token)
+        {
+            this._httpClient.SetBearerToken(token);
+            return this;
         }
 
 
