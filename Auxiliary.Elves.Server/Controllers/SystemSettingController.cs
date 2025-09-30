@@ -1,6 +1,8 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
 using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auxiliary.Elves.Server.Controllers
@@ -21,6 +23,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.SetSystemSettingRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool SetSystemSetting(SystemSettingRequestDto settingRequestDto)
         {
             return SystemSettingApiService.SetSystemSetting(settingRequestDto);
@@ -32,6 +35,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.SystemSettingRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public SystemSettingRequestDto GetSystemSetting() 
         {
           return SystemSettingApiService.GetSystemSetting();

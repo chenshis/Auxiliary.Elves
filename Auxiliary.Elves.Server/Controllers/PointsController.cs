@@ -1,6 +1,8 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
 using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auxiliary.Elves.Server.Controllers
@@ -36,6 +38,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.ExtractRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool ExtractPoints(string userName, int points)
         {
             return PointsApiService.ExtractPoints(userName, points);
@@ -49,6 +52,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.PointsRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public PointsDto GetPoints(string userName) 
         {
             return PointsApiService.GetPoints(userName);
@@ -61,6 +65,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.PointsUserRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<PointsDto> GetPointsUser()
         {
             return PointsApiService.GetPointsUser();
@@ -72,6 +77,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserPointsRecord)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<PointsDto> GetRecordPoints()
         {
             return PointsApiService.GetRecordPoints();

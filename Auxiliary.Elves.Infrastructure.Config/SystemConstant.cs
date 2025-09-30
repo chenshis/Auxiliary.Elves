@@ -53,6 +53,7 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 新增公告
         /// </summary>
         public const string AddAnnouncementRoute = "v1/auxiliary/announcement/addannouncement"; 
+
         /// <summary>
         /// 查询提取记录
         /// </summary>
@@ -136,6 +137,28 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string RecoverRoute = "v1/auxiliary/account/recover";
 
         /// <summary>
+        /// 新增服务器账号
+        /// </summary>
+        public const string RegisterServerRoute = "v1/auxiliary/account/registerserver";
+
+
+        /// <summary>
+        /// 登录服务器路由
+        /// </summary>
+        public const string LoginServerRoute = "v1/auxiliary/account/loginserver";
+
+        /// <summary>
+        /// 刷新token路由
+        /// </summary>
+        public const string RefreshTokenRoute = "v1/auxiliary/account/refresh-token";
+
+
+        /// <summary>
+        /// 登录客户端
+        /// </summary>
+        public const string LoginKeyRoute = "v1/auxiliary/account/loginkey";
+
+        /// <summary>
         /// 默认连接
         /// </summary>
         public const string DefaultConnection = nameof(DefaultConnection);
@@ -153,7 +176,45 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string ServerUrl = "http://47.238.158.162/";
 
         public const string Unauthorized = "权限认证失败";
+        /// <summary>
+        /// 用户名长度
+        /// </summary>
+        public const string ErrorUserNameLengthMessage = "登录名长度不在指定范围内！";
+        /// <summary>
+        /// 错误用户提示消息
+        /// </summary>
+        public const string ErrorNotExistUserNameMessage = "用户信息不存在！";
+        /// <summary>
+        /// 出错密码提示消息
+        /// </summary>
+        public const string ErrorEmptyPasswordMessage = "密码不能为空！";
 
-        public const string RefreshTokenRoute = "";
+        /// <summary>
+        /// 错误用户提示消息
+        /// </summary>
+        public const string ErrorEmptyUserNameMessage = "用户名不能为空！";
+
+        /// <summary>
+        /// 错误用户或密码
+        /// </summary>
+        public const string ErrorUserOrPasswordMessage = "用户名或密码不正确！";
+        /// <summary>
+        /// 异常空消息
+        /// </summary>
+        public const string ErrorEmptyMessage = "{0}不能为空！";
+        public const string ErrorExistMessage = "{0}已存在！";
+
+     
+
+        /* jwt 系统常量 */
+        public const string JwtSecurityKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDI2a2EJ7m872v0afyoSDJT2o1+SitIeJSWtLJU8/Wz2m7gStexajkeD+Lka6DSTy8gt9UwfgVQo6uKjVLG5Ex7PiGOODVqAEghBuS7JzIYU5RvI543nNDAPfnJsas96mSA7L/mD7RTE2drj6hf3oZjJpMPZUQI/B1Qjb5H3K3PNwIDAQAB";
+        public const string JwtAudience = "http://localhost:5245";
+        public const string JwtIssuer = "http://localhost:5245";
+        public const string JwtActor = "This is a stock trading function, welcome to use!";
+
+        /// <summary>
+        /// 刷新token异常
+        /// </summary>
+        public const string ErrorRefreshTokenFailMessage = "token刷新失败，请重新登录！";
     }
 }

@@ -1,20 +1,82 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
 using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NLog.Web.LayoutRenderers;
 
 namespace Auxiliary.Elves.Server.Controllers
 {
     public class AccountController : AuxiliaryControllerBase
     {
         public ILoginApiService LoginApiService { get; }
+        private readonly IJWTApiService JWTApiService;
 
-        public AccountController(ILoginApiService loginApiService)
+        public AccountController(ILoginApiService loginApiService,IJWTApiService jWTApiService)
         {
             LoginApiService = loginApiService;
+            JWTApiService= jWTApiService;
         }
+
+
+        /// <summary>
+        /// 登录(别用，与客户端交互用)
+        /// </summary>
+        /// <param name="key">密钥</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.LoginKeyRoute)]
+        public string LoginServer(string key)
+        {
+            if (key=="admin")
+            {
+                UserServerEntity user = new UserServerEntity()
+                {
+                    UserName = "dfasdfsfasfasf",
+                    Password = "sddwwww",
+                    Role= RoleEnum.Admin
+                };
+
+                return JWTApiService.GetToken(user);
+            }
+            return "";
+        }
+
+
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="accountRequest">账户信息</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.LoginServerRoute)]
+        public string LoginServer([FromBody] UserRequestDto accountRequest)
+        {
+            var user = LoginApiService.LoginServer(accountRequest);
+            return JWTApiService.GetToken(user);
+        }
+
+
+        /// <summary>
+        /// token刷新
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.RefreshTokenRoute)]
+        public string RefreshToken([FromBody] string token)
+        {
+            return JWTApiService.RefreshToken(token);
+        }
+
+        /// <summary>
+        /// 注册服务器账号
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.RegisterServerRoute)]
+        public bool RegisterServer([FromBody] UserRequestDto request) => LoginApiService.AddUser(request);
 
         /// <summary>
         /// 登录
@@ -34,6 +96,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<AccountUserDto> GetAllUser()
         {
             return LoginApiService.GetAllUser();
@@ -47,6 +110,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool Register(string userFeatureCode,string userInviteUserName="")
         {
             return LoginApiService.Register(userFeatureCode, userInviteUserName);
@@ -60,6 +124,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.BindGoogleRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool BindGoogleRoute(string userName,string userId)
         {
             return LoginApiService.BindGoogle(userName, userId);
@@ -73,11 +138,11 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.SetEnableStatusRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool SetEnableStatus(string userName, bool isEnable)
         {
             return LoginApiService.SetEnableStatus(userName, isEnable);
         }
-
 
         /// <summary>
         /// 根据账号查询所有被邀请用户
@@ -86,6 +151,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserInviteInfoRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<AccountUserDto> GetUserInviteUserInfo(string userName)
         {
             return LoginApiService.GetUserInviteUserInfo(userName);
@@ -100,6 +166,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.SetUserInviteRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool SetUserInvite(string userName, string userInviteUserName )
         {
             return LoginApiService.SetUserInvite(userName, userInviteUserName);
@@ -113,6 +180,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterKeyRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool RegisterKey(string userId,string verCode)
         {
             return LoginApiService.RegisterKey(userId,verCode);
@@ -124,6 +192,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserKeyRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<UserDto> GetAllUserKey()
         {
             return LoginApiService.GetAllUserKey();
@@ -137,7 +206,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RecoverRoute)]
-
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public string RecoverAccount(string userId, string verCode) 
         {
             return LoginApiService.RecoverAccount(userId,verCode);
@@ -151,7 +220,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.DelUserRoute)]
-
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool DelUser(string userkeyidserId)
         {
             return LoginApiService.DeleteUser(userkeyidserId);
@@ -164,6 +233,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserMacRoute)]
+        
         public List<UserDto> GetMacAllUser(string mac)
         {
             return LoginApiService.GetMacAllUser(mac);

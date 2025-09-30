@@ -1,6 +1,8 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
 using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auxiliary.Elves.Server.Controllers
@@ -22,6 +24,7 @@ namespace Auxiliary.Elves.Server.Controllers
 
         [HttpPost]
         [Route(SystemConstant.AddAnnouncementRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool AddAnnouncement(string ment)
         {
             return AnnouncementApiService.AddAnnouncement(ment);
@@ -33,7 +36,8 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route(SystemConstant.DelAnnouncementRoute)]    
+        [Route(SystemConstant.DelAnnouncementRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool RemoveAnnouncement(long id)
         {
             return AnnouncementApiService.DeleteAnnouncement(id);

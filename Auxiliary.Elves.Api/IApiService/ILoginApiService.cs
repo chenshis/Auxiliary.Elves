@@ -15,6 +15,20 @@ namespace Auxiliary.Elves.Api.IApiService
     {
 
         /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="UserRequestDto">登录</param>
+        /// <returns></returns>
+        UserServerEntity LoginServer(UserRequestDto accountRequest);
+
+        /// <summary>
+        /// 添加用户
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        bool AddUser(UserRequestDto request);
+
+        /// <summary>
         /// 根据账号查询所有被邀请用户
         /// </summary>
         /// <param name="userName">账号</param>
@@ -40,6 +54,7 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="password">卡密</param>
         /// <returns></returns>
         bool Login(AccountRequestDto accountRequest);
+
 
         /// <summary>
         /// 用户注册

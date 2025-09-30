@@ -24,5 +24,6 @@ namespace Auxiliary.Elves.Domain
         public DbSet<UserPointsRecordEntity> UserPointsRecordEntities { get; set; }
         public DbSet<AnnouncementEntity> AnnouncementEntities { get; set; }
         public DbSet<SystemSettingEntity> SystemSettingEntity { get; set; } 
+        public DbSet<UserServerEntity> UserServerEntities { get; set; }
     }
 }

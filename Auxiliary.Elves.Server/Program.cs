@@ -4,11 +4,15 @@ using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
 using Auxiliary.Elves.Server.Exceptions;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using NLog.Web;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,11 +25,33 @@ if (!Directory.Exists(videoDirectory))
 {
     Directory.CreateDirectory(videoDirectory);
 }
-
+builder.Services.AddScoped<IJWTApiService, JWTApiService>();
 builder.Services.AddScoped<ILoginApiService, LoginApiService>();
 builder.Services.AddScoped<IPointsApiService, PointsApiService>();
 builder.Services.AddScoped<IAnnouncementApiService, AnnouncementApiService>();
 builder.Services.AddScoped<ISystemSettingApiService, SystemSettingApiService>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidAudience = SystemConstant.JwtAudience,
+        ValidIssuer = SystemConstant.JwtIssuer,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SystemConstant.JwtSecurityKey)),
+        LifetimeValidator = (notBefore, expires, securityToken, validationParameters) =>
+        {
+            return expires >= DateTime.Now;
+        }
+    };
+});
+builder.Services.AddAuthorization(options =>
+{
+    //options.AddPolicy(nameof(RoleEnum.), policyBuilder => policyBuilder.Requirements.Add(new AdminRequirement()));
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -61,6 +87,35 @@ builder.Services.AddSwaggerGen(c =>
 
     // 加载注释
     c.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+
+    c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
+
+    // 添加 JWT 认证
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "输入格式: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+
 });
 builder.Services.AddHttpClient();
 
@@ -92,6 +147,10 @@ app.UseCors("AllowAll");  // 开启 CORS
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseException();
 app.MapControllers();

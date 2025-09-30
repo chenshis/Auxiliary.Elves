@@ -3,7 +3,10 @@ using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using Auxiliary.Elves.Infrastructure.Config.ExtensionMethods;
+using Namotion.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -14,6 +17,63 @@ namespace Auxiliary.Elves.Api.ApiService
         public LoginApiService(AuxiliaryDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+
+        /// <summary>
+        /// 登陆服务器
+        /// </summary>
+        /// <param name="accountRequest"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public UserServerEntity LoginServer(UserRequestDto accountRequest)
+        {
+            if (string.IsNullOrWhiteSpace(accountRequest.Password))
+            {
+                throw new Exception(SystemConstant.ErrorEmptyPasswordMessage);
+            }
+            if (string.IsNullOrWhiteSpace(accountRequest.UserName))
+            {
+                throw new Exception(SystemConstant.ErrorEmptyUserNameMessage);
+            }
+            var userPassword = accountRequest.Password.GetMd5();
+            var userName = accountRequest.UserName;
+            var userEntity = _dbContext.UserServerEntities.FirstOrDefault(t => t.UserName == userName && t.Password == userPassword);
+            if (userEntity == null)
+            {
+                throw new Exception(SystemConstant.ErrorUserOrPasswordMessage);
+            }
+            return userEntity;
+        }
+
+        public bool AddUser(UserRequestDto request)
+        {
+            RegisterValidate(request);
+
+            string GetErrorMessage(string propertyName, string errorTemplate)
+            {
+                var errorName = GetDocSummary(typeof(UserRequestDto), propertyName);
+                return string.Concat("", string.Format(errorTemplate, errorName));
+            }
+            var userEntity = _dbContext.UserServerEntities.FirstOrDefault(t => t.UserName == request.UserName);
+
+            if (userEntity != null)
+            {
+                if (userEntity.UserName == request.UserName)
+                {
+                    throw new Exception(GetErrorMessage(nameof(request.UserName), SystemConstant.ErrorExistMessage));
+                }
+            }
+            var addUserEntity = new UserServerEntity();
+            addUserEntity.UserName = request.UserName;
+            addUserEntity.Password = request.Password.GetMd5();
+            addUserEntity.Role = RoleEnum.Admin;
+            addUserEntity.Expires =DateTime.Now;
+            addUserEntity.Status = true;
+            _dbContext.UserServerEntities.Add(addUserEntity);
+            var result = _dbContext.SaveChanges();
+
+            return result > SystemConstant.Zero;
         }
 
         /// <summary>
@@ -423,5 +483,41 @@ namespace Auxiliary.Elves.Api.ApiService
             var result = _dbContext.SaveChanges();
             return result > SystemConstant.Zero;
         }
+
+
+        private void RegisterValidate(RegisterRequestDto registerRequest)
+        {
+            string GetErrorMessage(string propertyName, string errorTemplate)
+            {
+                var errorName = GetDocSummary(typeof(RegisterRequestDto), propertyName);
+                return string.Concat("", string.Format(errorTemplate, errorName));
+            }
+            if (string.IsNullOrWhiteSpace(registerRequest.UserName))
+            {
+                throw new Exception(GetErrorMessage(nameof(registerRequest.UserName), SystemConstant.ErrorEmptyMessage));
+            }
+            var userNameLength = registerRequest.UserName.Length;
+            if (userNameLength < 5 || userNameLength > 20)
+            {
+                throw new Exception(SystemConstant.ErrorUserNameLengthMessage);
+            }
+            if (string.IsNullOrWhiteSpace(registerRequest.Password))
+            {
+                throw new Exception(GetErrorMessage(nameof(registerRequest.Password), SystemConstant.ErrorEmptyMessage));
+            }
+          
+        }
+
+        /// <summary>
+        /// 获取属性名称
+        /// </summary>
+        /// <param name="type">类型</param>
+        /// <param name="propertyName">属性名</param>
+        /// <returns></returns>
+        private string GetDocSummary(Type type, string propertyName)
+        {
+            return type.GetProperty(propertyName).GetXmlDocsSummary();
+        }
+
     }
 }
