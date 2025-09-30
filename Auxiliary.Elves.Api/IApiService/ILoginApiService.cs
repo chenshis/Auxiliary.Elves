@@ -1,5 +1,7 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,21 @@ namespace Auxiliary.Elves.Api.IApiService
 {
     public interface ILoginApiService
     {
+
+        /// <summary>
+        /// 根据账号查询所有被邀请用户
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <returns></returns>
+        List<AccountUserDto> GetUserInviteUserInfo(string userName);
+
+        /// <summary>
+        /// 根据账号修改被邀请人
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userInviteUserName">邀请人</param>
+        /// <returns></returns>
+        bool SetUserInvite(string userName, string userInviteUserName);
         /// <summary>
         /// 获取所有用户信息
         /// </summary>

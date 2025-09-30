@@ -5,6 +5,7 @@ using Auxiliary.Elves.Infrastructure.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@ namespace Auxiliary.Elves.Api.ApiService
             if (string.IsNullOrWhiteSpace(userName) || points <= 0)
                 return false;
 
-            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userkeylastdate != null && t.Userid == userName);
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userid == userName);
 
             if (userEntity == null)
                 return false;
@@ -52,6 +53,15 @@ namespace Auxiliary.Elves.Api.ApiService
                 };
                  _dbContext.UserPointsEntities.Add(userModel);
             }
+
+            //记录积分记录
+            _dbContext.UserPointsRecordEntities.Add(new Domain.Entities.UserPointsRecordEntity
+            {
+                Userid = userName,
+                UpdateTime = DateTime.Now,
+                Userpoints= SystemConstant.MaxPoints,
+                IsExtract = false
+            });
 
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
@@ -87,7 +97,8 @@ namespace Auxiliary.Elves.Api.ApiService
             {
                 Userid = userName,
                 Userpoints = points,
-                Userdata = DateTime.Now
+                Userdata = DateTime.Now,
+                IsExtract = true
             });
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
@@ -112,7 +123,8 @@ namespace Auxiliary.Elves.Api.ApiService
             return userPointsRecords.Select(x => new PointsDto
             {
                 Userpoints = x.Userpoints,
-                UserPointsDate = x.Userdata.ToString("yyyy-MM-dd HH:mm:ss")
+                UserPointsDate = x.Userdata.ToString("yyyy-MM-dd HH:mm:ss"),
+                IsExtract = x.IsExtract
             }).ToList();
         }
 
@@ -127,14 +139,65 @@ namespace Auxiliary.Elves.Api.ApiService
             if (string.IsNullOrWhiteSpace(userName) )
                 return new PointsDto();
 
-            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userkeylastdate != null && t.Userid == userName);
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t =>  t.Userid == userName);
 
             if (userEntity == null)
                 return new PointsDto();
 
             var userPoints = _dbContext.UserPointsEntities.FirstOrDefault(t => t.Userid == userName);
 
-            return new PointsDto { Userpoints = userPoints.Userpoints, UserPointsDate= userPoints.UpdateTime.ToString("yyyy-MM-dd HH:mm:ss") };
+            return new PointsDto { UserName=userPoints.Userid, Userpoints = userPoints.Userpoints, UserPointsDate= userPoints.UpdateTime.ToString("yyyy-MM-dd HH:mm:ss") };
+        }
+
+        /// <summary>
+        /// 获取所有账号积分
+        /// </summary>
+        /// <returns></returns>
+        public List<PointsDto> GetPointsUser()
+        {
+            var result = new List<PointsDto>();
+
+            var userPoints = _dbContext.UserPointsEntities.ToList();
+
+            foreach (var point in userPoints)
+            {
+                result.Add(new PointsDto
+                {
+                    UserName = point.Userid,
+                    Userpoints = point.Userpoints,
+                    UserPointsDate = point.UpdateTime.ToString("yyyy-MM-dd HH:mm:ss")
+
+                });
+            }
+
+            return result;
+
+        }
+
+        /// <summary>
+        /// 获取所有账号积分记录
+        /// </summary>
+        /// <returns></returns>
+        public List<PointsDto> GetRecordPoints()
+        {
+            var result = new List<PointsDto>();
+
+            var userPoints = _dbContext.UserPointsRecordEntities.ToList();
+
+            foreach (var point in userPoints)
+            {
+                result.Add(new PointsDto
+                {
+                    UserName = point.Userid,
+                    Userpoints = point.Userpoints,
+                    UserPointsDate = point.Userdata.ToString("yyyy-MM-dd HH:mm:ss"),
+                    IsExtract=point.IsExtract
+
+                });
+            }
+
+            return result;
+
         }
     }
 }

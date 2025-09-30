@@ -39,6 +39,16 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <returns></returns>
         PointsDto GetPoints(string userName);
 
+        /// <summary>
+        /// 获取所有账号积分
+        /// </summary>
+        /// <returns></returns>
+        List<PointsDto> GetPointsUser();
 
+        /// <summary>
+        /// 获取所有账号积分记录
+        /// </summary>
+        /// <returns></returns>
+        List<PointsDto> GetRecordPoints();
     }
 }

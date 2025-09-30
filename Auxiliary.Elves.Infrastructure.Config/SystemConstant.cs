@@ -67,6 +67,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         public const string PointsRoute= "v1/auxiliary/points/querypoints";
 
         /// <summary>
+        /// 获取所有账号积分
+        /// </summary>
+        public const string PointsUserRoute = "v1/auxiliary/points/queryuserpoints";
+
+        /// <summary>
         /// 新增积分
         /// </summary>
         public const string AddPointsRoute = "v1/auxiliary/points/addpoints";
@@ -99,6 +104,16 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 设置用户账号状态
         /// </summary>
         public const string SetEnableStatusRoute = "v1/auxiliary/account/setenablestatus";
+
+        /// <summary>
+        /// 查询所有被邀请人
+        /// </summary>
+        public const string UserInviteInfoRoute= "v1/auxiliary/account/queryuserinviteuser";
+
+        /// <summary>
+        /// 修改邀请人
+        /// </summary>
+        public const string SetUserInviteRoute="v1/auxiliary/account/setuserinvite";
 
         /// <summary>
         /// 注册卡密路由

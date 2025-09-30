@@ -8,7 +8,10 @@ namespace Auxiliary.Elves.Api.Dtos
 {
     public class PointsDto
     {
-
+        /// <summary>
+        /// 用户
+        /// </summary>
+        public string UserName { get; set; }
         /// <summary>
         /// 积分,;
         /// </summary>
@@ -18,5 +21,10 @@ namespace Auxiliary.Elves.Api.Dtos
         /// 日期
         /// </summary>
         public string UserPointsDate { get; set; }
+
+        /// <summary>
+        /// 是否提取
+        /// </summary>
+        public bool IsExtract { get; set; }
     }
 }

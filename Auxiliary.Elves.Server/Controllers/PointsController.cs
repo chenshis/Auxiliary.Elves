@@ -29,18 +29,6 @@ namespace Auxiliary.Elves.Server.Controllers
         }
 
         /// <summary>
-        /// 获取积分
-        /// </summary>
-        /// <param name="userName">账号</param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route(SystemConstant.PointsRoute)]
-        public PointsDto GetPoints(string userName) 
-        {
-            return PointsApiService.GetPoints(userName);
-        }
-
-        /// <summary>
         /// 提取积分
         /// </summary>
         /// <param name="userName">账号</param>
@@ -53,16 +41,42 @@ namespace Auxiliary.Elves.Server.Controllers
             return PointsApiService.ExtractPoints(userName, points);
         }
 
+
         /// <summary>
-        /// 查询提取记录
+        /// 根据账号获取总积分
         /// </summary>
         /// <param name="userName">账号</param>
         /// <returns></returns>
         [HttpPost]
-        [Route(SystemConstant.UserPointsRecord)]
-        public List<PointsDto> GetExtractPoints(string userName)
+        [Route(SystemConstant.PointsRoute)]
+        public PointsDto GetPoints(string userName) 
         {
-            return PointsApiService.GetExtractPoints(userName);
-        }   
+            return PointsApiService.GetPoints(userName);
+        }
+
+
+        /// <summary>
+        /// 获取所有账号总积分
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.PointsUserRoute)]
+        public List<PointsDto> GetPointsUser()
+        {
+            return PointsApiService.GetPointsUser();
+        }
+
+        /// <summary>
+        /// 获取所有账号积分记录
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserPointsRecord)]
+        public List<PointsDto> GetRecordPoints()
+        {
+            return PointsApiService.GetRecordPoints();
+        }
+
+      
     }
 }

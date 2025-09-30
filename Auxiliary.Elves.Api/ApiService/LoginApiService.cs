@@ -16,6 +16,81 @@ namespace Auxiliary.Elves.Api.ApiService
             _dbContext = dbContext;
         }
 
+        /// <summary>
+        /// 根据账号查询所有被邀请用户
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <returns></returns>
+        public List<AccountUserDto> GetUserInviteUserInfo(string userName)
+        {
+            var userDtos = new List<AccountUserDto>();
+
+            if (string.IsNullOrEmpty(userName)) { return  userDtos; }
+
+            var userEntity = _dbContext.UserEntities.ToList();
+
+            var userInfo= userEntity.FirstOrDefault(x => x.UserName == userName);
+
+            if (userInfo == null) { return userDtos; }
+
+            var userList=GetAllChildren(userEntity,userInfo.UserName);
+
+            foreach (var user in userList)
+            {
+                userDtos.Add(new AccountUserDto
+                {
+                    Userid = user.UserId,
+                    UserName = user.UserName,
+                    Userfeaturecode = user.UserFeatureCode,
+                    Userbakckupnumber = user.UserBakckupNumber,
+                    CreateTime = user.CreateTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    IsEnable = user.IsEnable
+                });
+            }
+
+
+            return userDtos;
+        }
+
+        public List<UserEntity> GetAllChildren(List<UserEntity> allUsers, string parentUserName)
+        {
+            var result = new List<UserEntity>();
+
+            // 找出直接下级
+            var children = allUsers.Where(x => x.UserInviteUserName == parentUserName).ToList();
+            foreach (var child in children)
+            {
+                result.Add(child);
+                // 递归查找 child 的下级
+                result.AddRange(GetAllChildren(allUsers, child.UserName));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 根据账号修改被邀请人
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userInviteUserName">邀请人</param>
+        /// <returns></returns>
+        public bool SetUserInvite(string userName, string userInviteUserName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return false;
+
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(t => t.UserName == userName);
+
+            if (userEntity == null)
+                return false;
+
+            userEntity.UserInviteUserName = userInviteUserName;
+
+            _dbContext.UserEntities.Update(userEntity);
+
+            return _dbContext.SaveChanges() > SystemConstant.Zero;
+        }
+
         public bool DeleteUser(string userkeyid)
         {
             if (string.IsNullOrWhiteSpace(userkeyid))

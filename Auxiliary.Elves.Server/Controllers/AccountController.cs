@@ -1,6 +1,7 @@
 ﻿using Auxiliary.Elves.Api.Dtos;
 using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 using NLog.Web.LayoutRenderers;
 
@@ -77,7 +78,33 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.SetEnableStatus(userName, isEnable);
         }
 
-        
+
+        /// <summary>
+        /// 根据账号查询所有被邀请用户
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserInviteInfoRoute)]
+        public List<AccountUserDto> GetUserInviteUserInfo(string userName)
+        {
+            return LoginApiService.GetUserInviteUserInfo(userName);
+        }
+
+
+        /// <summary>
+        /// 根据账号修改被邀请人
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userInviteUserName">邀请人</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.SetUserInviteRoute)]
+        public bool SetUserInvite(string userName, string userInviteUserName )
+        {
+            return LoginApiService.SetUserInvite(userName, userInviteUserName);
+        }
+
         /// <summary>
         /// 生成卡密
         /// </summary>
@@ -101,7 +128,6 @@ namespace Auxiliary.Elves.Server.Controllers
         {
             return LoginApiService.GetAllUserKey();
         }
-
 
         /// <summary>
         /// 找回账号
