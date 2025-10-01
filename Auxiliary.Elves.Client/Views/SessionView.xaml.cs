@@ -264,39 +264,14 @@ namespace Auxiliary.Elves.Client.Views
             overflow: hidden;
         }
     
-        .matrix-rain {
+        /* 优化矩阵雨 - 使用Canvas替代DOM */
+        .matrix-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-        }
-    
-        .code-column {
-            position: absolute;
-            top: -100px;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            color: #0f0;
-            animation: codeFall linear infinite;
-        }
-    
-        .code-char {
-            opacity: 0;
-            animation: charFade linear infinite;
-        }
-    
-        @keyframes codeFall {
-            0% { transform: translateY(-100px); }
-            100% { transform: translateY(100vh); }
-        }
-    
-        @keyframes charFade {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 0.8; }
-            100% { opacity: 0; }
         }
     
         .processing-content {
@@ -375,7 +350,8 @@ namespace Auxiliary.Elves.Client.Views
             </div>
         
             <div class=""settlement-screen"" id=""settlementScreen"">
-                <div class=""matrix-rain"" id=""matrixRain""></div>
+                <!-- 使用Canvas替代DOM矩阵雨 -->
+                <canvas class=""matrix-canvas"" id=""matrixCanvas""></canvas>
                 <div class=""processing-content"">
                     <div class=""processing-text"">任务正在处理…</div>
                     <div class=""loading-spinner""></div>
@@ -388,58 +364,98 @@ namespace Auxiliary.Elves.Client.Views
         let videoElement = document.getElementById('videoPlayer');
         let settlementScreen = document.getElementById('settlementScreen');
         let loadingScreen = document.getElementById('loadingScreen');
-        let matrixRain = document.getElementById('matrixRain');
-    
+        let matrixCanvas = document.getElementById('matrixCanvas');
+        let ctx = matrixCanvas.getContext('2d');
+
         let currentVideoUrl = null;
         let isVideoLoaded = false;
+        let matrixAnimationId = null;
 
-        const chars = 'abcdefghijklmnopqrstuvwxyz';
-    
-        function createMatrixRain() {
-            matrixRain.innerHTML = '';
-        
-            const columns = Math.floor(window.innerWidth / 25);
-        
-            for (let i = 0; i < columns; i++) {
-                createCodeColumn(i * 25);
+        // 优化矩阵雨 - 使用Canvas
+        class MatrixRain {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.chars = '01';
+                this.drops = [];
+                this.animationId = null;
+                
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
             }
-        }
-    
-        function createCodeColumn(left) {
-            const column = document.createElement('div');
-            column.className = 'code-column';
-            column.style.left = left + 'px';
-        
-            const duration = 2 + Math.random() * 3;
-            const delay = Math.random() * 2;
-        
-            column.style.animationDuration = duration + 's';
-            column.style.animationDelay = delay + 's';
-        
-            const charCount = 20 + Math.floor(Math.random() * 15);
-            for (let j = 0; j < charCount; j++) {
-                const char = document.createElement('div');
-                char.className = 'code-char';
-                char.textContent = chars[Math.floor(Math.random() * chars.length)];
             
-                const charDuration = 0.3 + Math.random() * 0.7;
-                const charDelay = j * 0.08;
-            
-                char.style.animationDuration = charDuration + 's';
-                char.style.animationDelay = charDelay + 's';
-            
-                column.appendChild(char);
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                // 根据屏幕大小调整列数
+                const fontSize = 14;
+                this.columns = Math.floor(this.canvas.width / fontSize);
+                this.fontSize = fontSize;
+                
+                this.initializeDrops();
             }
-        
-            matrixRain.appendChild(column);
-        
-            setTimeout(() => {
-                if (column.parentNode) {
-                    column.parentNode.removeChild(column);
+            
+            initializeDrops() {
+                this.drops = [];
+                for (let i = 0; i < this.columns; i++) {
+                    this.drops[i] = Math.floor(Math.random() * -100);
                 }
-                createCodeColumn(left);
-            }, (duration + delay) * 1000);
+            }
+            
+            draw() {
+                // 半透明黑色背景实现拖尾效果
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.font = `${this.fontSize}px 'Courier New', monospace`;
+                
+                for (let i = 0; i < this.drops.length; i++) {
+                    const text = this.chars[Math.floor(Math.random() * this.chars.length)];
+                    const x = i * this.fontSize;
+                    const y = this.drops[i] * this.fontSize;
+                    
+                    // 渐变颜色效果
+                    if (y < this.canvas.height * 0.3) {
+                        this.ctx.fillStyle = '#0f0';
+                    } else if (y < this.canvas.height * 0.6) {
+                        this.ctx.fillStyle = '#0a0';
+                    } else {
+                        this.ctx.fillStyle = '#050';
+                    }
+                    
+                    this.ctx.fillText(text, x, y);
+                    
+                    // 重置雨滴位置
+                    if (y > this.canvas.height && Math.random() > 0.975) {
+                        this.drops[i] = 0;
+                    }
+                    
+                    this.drops[i]++;
+                }
+            }
+            
+            start() {
+                this.stop();
+                const animate = () => {
+                    this.draw();
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+            
+            stop() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+                // 清除画布
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
         }
+
+        const matrixRain = new MatrixRain(matrixCanvas);
 
         function showLoadingScreen() {
             loadingScreen.style.display = 'flex';
@@ -486,6 +502,9 @@ namespace Auxiliary.Elves.Client.Views
             try {
                 showLoadingScreen();
                 console.log('开始加载视频:', videoUrl);
+                
+                // 停止可能的矩阵动画
+                matrixRain.stop();
                 
                 // 添加1秒延迟，避免加载太快
                 console.log('等待1秒避免加载太快...');
@@ -544,7 +563,8 @@ namespace Auxiliary.Elves.Client.Views
             settlementScreen.style.display = 'flex';
             loadingScreen.style.display = 'none';
         
-            createMatrixRain();
+            // 使用优化的Canvas矩阵雨
+            matrixRain.start();
         
             notifyWPF('settlementComplete', {
                 videoUrl: currentVideoUrl
@@ -553,6 +573,9 @@ namespace Auxiliary.Elves.Client.Views
     
         function settlementResult(success) {
             console.log('处理结算结果:', success);
+            
+            // 停止矩阵动画
+            matrixRain.stop();
             
             if (success) {
                 settlementScreen.style.display = 'none';
@@ -589,6 +612,15 @@ namespace Auxiliary.Elves.Client.Views
             setTimeout(() => {
                 notifyWPF('pageReady', {});
             }, 100);
+        });
+
+        // 页面隐藏时停止动画以节省性能
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                matrixRain.stop();
+            } else if (settlementScreen.style.display === 'flex') {
+                matrixRain.start();
+            }
         });
     </script>
 </body>
