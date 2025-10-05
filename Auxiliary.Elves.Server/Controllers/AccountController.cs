@@ -4,6 +4,7 @@ using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.NetworkInformation;
 
 namespace Auxiliary.Elves.Server.Controllers
 {
@@ -60,12 +61,16 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <summary>
         /// token刷新
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="token">原token</param>
+        /// <param name="key">刷新密钥</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RefreshTokenRoute)]
-        public string RefreshToken([FromBody] string token)
+        public string RefreshToken([FromBody] string token,string key)
         {
+            if (key != "Qm9kZUFJX0pXVF9TZWNyZXRfa2V5XzIwMjUtMDktMzBfSldUX1NhZmU=")
+                return "";
+
             return JWTApiService.RefreshToken(token);
         }
 
@@ -233,12 +238,24 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserMacRoute)]
-        
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<UserDto> GetMacAllUser(string mac)
         {
             return LoginApiService.GetMacAllUser(mac);
         }
 
-      
+
+        /// <summary>
+        /// 根据账号查询下面所有卡密
+        /// </summary>
+        /// <param name="userId">账号</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UserToKeyRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
+        public List<UserDto> GetUserAllKey(string userId)
+        {
+            return LoginApiService.GetUserAllKey(userId);
+        }
     }
 }

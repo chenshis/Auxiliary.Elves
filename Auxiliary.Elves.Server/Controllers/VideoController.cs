@@ -1,6 +1,8 @@
 ﻿using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
@@ -27,6 +29,7 @@ namespace Auxiliary.Elves.Server.Controllers
         [Route(SystemConstant.VideoUploadRoute)]
         [DisableRequestSizeLimit]
         [RequestFormLimits(MultipartBodyLengthLimit = 314572800)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public async Task<bool> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -59,6 +62,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.VideoDownloadRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public async Task<IActionResult> Download(string mac)
         {
             var baseDic = AppDomain.CurrentDomain.BaseDirectory;
@@ -93,6 +97,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.VideoVideoUrlRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public async Task<string> GetVideoUrl()
         {
             var baseDic = AppDomain.CurrentDomain.BaseDirectory;

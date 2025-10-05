@@ -85,7 +85,10 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// mac获取卡用户
         /// </summary>
         public const string UserMacRoute = "v1/auxiliary/account/getusermac";
-
+        /// <summary>
+        /// 账号获取下面卡密
+        /// </summary>
+        public const string UserToKeyRoute = "v1/auxiliary/account/getuserkey";
         /// <summary>
         /// 登录路由
         /// </summary>

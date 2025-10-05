@@ -49,6 +49,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.AnnouncementRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public List<AnnouncementDto> GetAnnouncement()
         {
             return AnnouncementApiService.GetAnnouncementDto();

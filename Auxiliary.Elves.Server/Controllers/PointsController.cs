@@ -25,6 +25,7 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.AddPointsRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
         public bool AddPoints(string userName)
         {
             return PointsApiService.AddPoints(userName, 1);

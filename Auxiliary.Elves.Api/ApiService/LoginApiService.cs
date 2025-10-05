@@ -4,8 +4,11 @@ using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Auxiliary.Elves.Infrastructure.Config.ExtensionMethods;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Namotion.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace Auxiliary.Elves.Api.ApiService
@@ -236,6 +239,46 @@ namespace Auxiliary.Elves.Api.ApiService
             }
 
           
+            return userDtos;
+        }
+
+        /// <summary>
+        /// 根据账号查询下面所有卡密
+        /// </summary>
+        /// <param name="userId">账号</param>
+        /// <returns></returns>
+        public List<UserDto> GetUserAllKey(string userId)
+        {
+            var userDtos = new List<UserDto>();
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return userDtos;
+
+            var userEntities = _dbContext.UserKeyEntities.Where(t =>  t.Userid == userId).ToList();
+
+            if (!userEntities.Any())
+                return userDtos;
+
+            foreach (var user in userEntities)
+            {
+                var userInfo = new UserDto
+                {
+                    Userkey = user.Userkey,
+                    Userkeyid = user.Userkeyid,
+                    Userkeylastdate = user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userid = user.Userid,
+                    Isonline = user.Isonline,
+                };
+
+                DateTime expireDate;
+                expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
+                userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+
+                if (expireDate >= DateTime.Now)
+                    userDtos.Add(userInfo);
+            }
+
+
             return userDtos;
         }
 

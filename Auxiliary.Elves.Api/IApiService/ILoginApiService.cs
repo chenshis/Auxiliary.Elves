@@ -103,6 +103,13 @@ namespace Auxiliary.Elves.Api.IApiService
         List<UserDto> GetMacAllUser(string mac);
 
         /// <summary>
+        /// 根据账号查询下面所有卡密
+        /// </summary>
+        /// <param name="userId">账号</param>
+        /// <returns></returns>
+        List<UserDto> GetUserAllKey(string userId);
+
+        /// <summary>
         /// 通过谷歌账号找回账号
         /// </summary>
         /// <param name="userId"></param>
