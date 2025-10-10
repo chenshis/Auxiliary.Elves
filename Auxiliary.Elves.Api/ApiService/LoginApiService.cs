@@ -302,12 +302,16 @@ namespace Auxiliary.Elves.Api.ApiService
 
             var userEntityKey = _dbContext.UserKeyEntities.ToList();
 
+            var userPoints = _dbContext.UserPointsEntities.ToList();
+
             if (!string.IsNullOrWhiteSpace(userFeatureCode))
                 userEntity = userEntity.Where(x => x.UserFeatureCode == userFeatureCode).ToList();
 
             foreach (var user in userEntity)
             {
                 var userKeyCount = userEntityKey.Count(t => t.Userid == user.UserName);
+
+                var points = userPoints.FirstOrDefault(x => x.Userid == user.UserName);
 
                 userDtos.Add(new AccountUserDto
                 {
@@ -319,6 +323,7 @@ namespace Auxiliary.Elves.Api.ApiService
                     IsEnable = user.IsEnable,
                     UserAddress = user.UserAddress,
                     UserInviteUserName = user.UserInviteUserName,
+                    Userpoints= points!=null ? points.Userpoints : 0,
                     UserNumber = userKeyCount
                 });
             }

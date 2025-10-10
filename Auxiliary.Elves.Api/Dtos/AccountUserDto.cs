@@ -50,6 +50,11 @@
         /// <summary>
         /// 邀请人
         /// </summary>
-        public string UserInviteUserName { get; set; }  
+        public string UserInviteUserName { get; set; }
+
+        /// <summary>
+        /// 积分,;
+        /// </summary>
+        public int Userpoints { get; set; }
     }
 }
