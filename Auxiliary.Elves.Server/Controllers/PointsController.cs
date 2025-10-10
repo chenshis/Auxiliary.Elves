@@ -17,6 +17,22 @@ namespace Auxiliary.Elves.Server.Controllers
             PointsApiService = pointsApiService;
         }
 
+
+        /// <summary>
+        /// 新增自定义积分
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="points">积分</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.AddCustomPointsRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
+        public bool AddPoints(string userName,int points)
+        {
+            return PointsApiService.AddPoints(userName, points);
+        }
+
+
         /// <summary>
         /// 新增积分
         /// </summary>
@@ -75,13 +91,17 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <summary>
         /// 获取所有账号积分记录
         /// </summary>
+        /// <param name="userFeatureCode">特征码 可为空</param>
+        /// <param name="userName">账号 可为空</param>
+        /// <param name="pageNumber">当前页 必填</param>
+        /// <param name="pageSize">每页条数 必填</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserPointsRecord)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public List<PointsDto> GetRecordPoints()
+        public PointsPageDto GetRecordPoints(string userFeatureCode,string userName, int pageNumber,int pageSize)
         {
-            return PointsApiService.GetRecordPoints();
+            return PointsApiService.GetRecordPoints(userFeatureCode, userName, pageNumber,pageSize);
         }
 
       

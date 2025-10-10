@@ -6,6 +6,20 @@ using System.Threading.Tasks;
 
 namespace Auxiliary.Elves.Api.Dtos
 {
+    public class PointsPageDto 
+    {
+        /// <summary>
+        /// 总条数
+        /// </summary>
+        public int TotalCount { get; set; }
+        /// <summary>
+        /// 总页数
+        /// </summary>
+        public int TotalPages { get; set; }
+
+        public List<PointsDto> PointInfo { get; set; }  
+    }
+
     public class PointsDto
     {
         /// <summary>

@@ -49,6 +49,6 @@ namespace Auxiliary.Elves.Api.IApiService
         /// 获取所有账号积分记录
         /// </summary>
         /// <returns></returns>
-        List<PointsDto> GetRecordPoints();
+        PointsPageDto GetRecordPoints(string userFeatureCode, string userName, int pageNumber, int pageSize);
     }
 }

@@ -4,7 +4,6 @@ using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.NetworkInformation;
 
 namespace Auxiliary.Elves.Server.Controllers
 {
@@ -43,7 +42,6 @@ namespace Auxiliary.Elves.Server.Controllers
             return "";
         }
 
-
         /// <summary>
         /// 登录
         /// </summary>
@@ -56,7 +54,6 @@ namespace Auxiliary.Elves.Server.Controllers
             var user = LoginApiService.LoginServer(accountRequest);
             return JWTApiService.GetToken(user);
         }
-
 
         /// <summary>
         /// token刷新
@@ -95,16 +92,18 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.Login(accountRequest);
         }
 
+
         /// <summary>
         /// 获取所有用户信息
         /// </summary>
+        /// <param name="userFeatureCode">特征码</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public List<AccountUserDto> GetAllUser()
+        public List<AccountUserDto> GetAllUser(string userFeatureCode)
         {
-            return LoginApiService.GetAllUser();
+            return LoginApiService.GetAllUser(userFeatureCode);
         }
 
         /// <summary>
@@ -122,24 +121,38 @@ namespace Auxiliary.Elves.Server.Controllers
         }
 
         /// <summary>
-        /// 用户绑定谷歌
+        /// 用户绑定地址
         /// </summary>
         /// <param name="userName">账号</param>
-        /// <param name="userId">谷歌密钥</param>
+        /// <param name="userAddress">地址</param>
         /// <returns></returns>
         [HttpPost]
-        [Route(SystemConstant.BindGoogleRoute)]
+        [Route(SystemConstant.BindAddressRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public bool BindGoogleRoute(string userName,string userId)
+        public bool BindAddress(string userName, string userAddress)
         {
-            return LoginApiService.BindGoogle(userName, userId);
+            return LoginApiService.BindAddress(userName, userAddress);
         }
+
+        ///// <summary>
+        ///// 用户绑定谷歌
+        ///// </summary>
+        ///// <param name="userName">账号</param>
+        ///// <param name="userId">谷歌密钥</param>
+        ///// <returns></returns>
+        //[HttpPost]
+        //[Route(SystemConstant.BindGoogleRoute)]
+        //[Authorize(Roles = nameof(RoleEnum.Admin))]
+        //public bool BindGoogle(string userName,string userId)
+        //{
+        //    return LoginApiService.BindGoogle(userName, userId);
+        //}
 
         /// <summary>
         /// 用户设置是否有效
         /// </summary>
         /// <param name="userName">账号</param>
-        /// <param name="userId">谷歌密钥</param>
+        /// <param name="isEnable">是否有效</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.SetEnableStatusRoute)]
@@ -162,7 +175,6 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.GetUserInviteUserInfo(userName);
         }
 
-
         /// <summary>
         /// 根据账号修改被邀请人
         /// </summary>
@@ -180,15 +192,15 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <summary>
         /// 生成卡密
         /// </summary>
-        /// <param name="userId">谷歌秘钥</param>
-        /// <param name="verCode">验证码</param>
+        /// <param name="userName">用户账号</param>
+        /// <param name="userNumber">数量</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.RegisterKeyRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public bool RegisterKey(string userId,string verCode)
+        public bool RegisterKey(string userName,int userNumber)
         {
-            return LoginApiService.RegisterKey(userId,verCode);
+            return LoginApiService.RegisterKey(userName, userNumber);
         }
 
         /// <summary>
@@ -198,9 +210,9 @@ namespace Auxiliary.Elves.Server.Controllers
         [HttpPost]
         [Route(SystemConstant.UserKeyRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public List<UserDto> GetAllUserKey()
+        public List<UserDto> GetAllUserKey(string userFeatureCode)
         {
-            return LoginApiService.GetAllUserKey();
+            return LoginApiService.GetAllUserKey(userFeatureCode);
         }
 
         /// <summary>

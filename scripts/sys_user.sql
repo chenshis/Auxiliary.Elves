@@ -9,6 +9,7 @@ CREATE TABLE sys_user(
     `UserBakckupNumber` VARCHAR(8) NOT NULL COMMENT '备用数字',
     `UserBindAccount` VARCHAR(100) COMMENT '绑定谷歌账号',
     `UserInviteUserName` VARCHAR(100) COMMENT '邀请人账号',
+    `UserAddress` VARCHAR(500) COMMENT '地址',
     `IsEnable` BOOLEAN COMMENT '是否启用',
     `CreateUser` VARCHAR(50) COMMENT '创建人',
     `CreateTime` DATETIME COMMENT '创建时间',

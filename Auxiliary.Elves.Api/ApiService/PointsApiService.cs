@@ -178,21 +178,51 @@ namespace Auxiliary.Elves.Api.ApiService
         /// 获取所有账号积分记录
         /// </summary>
         /// <returns></returns>
-        public List<PointsDto> GetRecordPoints()
+        public PointsPageDto GetRecordPoints(string userFeatureCode, string userNames, int pageNumber, int pageSize)
         {
-            var result = new List<PointsDto>();
-
-            var userPoints = _dbContext.UserPointsRecordEntities.ToList();
-
-            foreach (var point in userPoints)
+            var result = new PointsPageDto
             {
-                result.Add(new PointsDto
+                TotalCount = 0,
+                TotalPages = 0,
+                PointInfo = new List<PointsDto>(),
+            };
+
+            if (pageNumber <= 0 && pageSize <= 0)
+                return result;
+
+            var userName = "";
+
+            if (!string.IsNullOrWhiteSpace(userFeatureCode))
+            {
+                var userInfo = _dbContext.UserEntities.FirstOrDefault(x => x.UserFeatureCode == userFeatureCode);
+
+                if (userInfo != null)
+                    userName = userInfo.UserName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(userNames))
+                userName = userNames;
+
+            var userPoints = !string.IsNullOrWhiteSpace(userName)?
+                _dbContext.UserPointsRecordEntities.Where(x=>x.Userid==userName).ToList()
+                : _dbContext.UserPointsRecordEntities.ToList();
+
+            var pagedData = userPoints
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            result.TotalCount = userPoints.Count;
+            result.TotalPages = (int)Math.Ceiling(result.TotalCount / (double)pageSize);
+
+            foreach (var point in pagedData)
+            {
+                result.PointInfo.Add(new PointsDto
                 {
                     UserName = point.Userid,
                     Userpoints = point.Userpoints,
                     UserPointsDate = point.Userdata.ToString("yyyy-MM-dd HH:mm:ss"),
                     IsExtract=point.IsExtract
-
                 });
             }
 

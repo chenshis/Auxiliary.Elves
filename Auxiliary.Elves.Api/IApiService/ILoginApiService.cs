@@ -46,7 +46,7 @@ namespace Auxiliary.Elves.Api.IApiService
         /// 获取所有用户信息
         /// </summary>
         /// <returns></returns>
-        List<AccountUserDto> GetAllUser();
+        List<AccountUserDto> GetAllUser(string userFeatureCode);
         /// <summary>
         /// 登录
         /// </summary>
@@ -72,6 +72,14 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <returns></returns>
         bool BindGoogle(string userName, string userId);
 
+        /// <summary>
+        /// 绑定地址
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userAddress">地址</param>
+        /// <returns></returns>
+        bool BindAddress(string userName, string userAddress);
+
 
         /// <summary>
         /// 用户设置是否有效
@@ -84,16 +92,17 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <summary>
         /// 生成卡密
         /// </summary>
-        /// <param name="userId">谷歌秘钥</param>
-        /// <param name="verCode">验证码</param>
+        /// <param name="userName">用户账号</param>
+        /// <param name="userNumber">数量</param>
         /// <returns></returns>
-        bool RegisterKey(string userId,string verCode);
+        bool RegisterKey(string userName, int userNumber);
 
         /// <summary>
         /// 获取所有用户卡密信息
         /// </summary>
+        /// <param name="userFeatureCode">特征码</param>
         /// <returns></returns>
-        List<UserDto> GetAllUserKey();
+        List<UserDto> GetAllUserKey(string userFeatureCode);
 
         /// <summary>
         /// 根据mac查询所有卡密

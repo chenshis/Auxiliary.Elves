@@ -6,6 +6,7 @@ using Auxiliary.Elves.Infrastructure.Config;
 using Auxiliary.Elves.Infrastructure.Config.ExtensionMethods;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Namotion.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -171,14 +172,25 @@ namespace Auxiliary.Elves.Api.ApiService
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
 
-        public List<UserDto> GetAllUserKey()
+        public List<UserDto> GetAllUserKey(string userFeatureCode)
         {
-            var userDtos = new List<UserDto>(); 
+            var userDtos = new List<UserDto>();
 
-          
-            var userEntities = _dbContext.UserKeyEntities.ToList();
+            var userName = "";
 
-            if(!userEntities.Any())
+            if (!string.IsNullOrWhiteSpace(userFeatureCode))
+            {
+                var userInfo = _dbContext.UserEntities.FirstOrDefault(x => x.UserFeatureCode == userFeatureCode);
+
+                if (userInfo != null)
+                    userName = userInfo.UserName;
+            }
+
+            var userEntities = !string.IsNullOrWhiteSpace(userName) ?
+                _dbContext.UserKeyEntities.Where(x => x.Userid == userName).ToList()
+                : _dbContext.UserKeyEntities.ToList();
+            
+            if (!userEntities.Any())
                 return userDtos;
 
 
@@ -282,13 +294,16 @@ namespace Auxiliary.Elves.Api.ApiService
             return userDtos;
         }
 
-        public List<AccountUserDto> GetAllUser()
+        public List<AccountUserDto> GetAllUser(string userFeatureCode)
         {
             var userDtos = new List<AccountUserDto>();
 
-            var userEntity = _dbContext.UserEntities;
+            var userEntity = _dbContext.UserEntities.ToList();
 
             var userEntityKey = _dbContext.UserKeyEntities.ToList();
+
+            if (!string.IsNullOrWhiteSpace(userFeatureCode))
+                userEntity = userEntity.Where(x => x.UserFeatureCode == userFeatureCode).ToList();
 
             foreach (var user in userEntity)
             {
@@ -302,6 +317,8 @@ namespace Auxiliary.Elves.Api.ApiService
                     Userbakckupnumber = user.UserBakckupNumber,
                     CreateTime = user.CreateTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     IsEnable = user.IsEnable,
+                    UserAddress = user.UserAddress,
+                    UserInviteUserName = user.UserInviteUserName,
                     UserNumber = userKeyCount
                 });
             }
@@ -411,6 +428,7 @@ namespace Auxiliary.Elves.Api.ApiService
 
             UserEntity user = new UserEntity();
             user.UserId ="";
+            user.UserAddress = "";
             user.UserFeatureCode = userFeatureCode;
             user.UserName = userName;
             user.UserBakckupNumber = userNumber;
@@ -423,7 +441,30 @@ namespace Auxiliary.Elves.Api.ApiService
             return result > SystemConstant.Zero;
         }
 
+        /// <summary>
+        /// 绑定地址
+        /// </summary>
+        /// <param name="userName">账号</param>
+        /// <param name="userAddress">地址</param>
+        /// <returns></returns>
+        public bool BindAddress(string userName, string userAddress) 
+        {
+            if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(userAddress))
+                return false;
 
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName);
+
+            if (userEntity == null || !string.IsNullOrWhiteSpace(userEntity.UserAddress))
+                return false;
+
+            userEntity.UserAddress = userAddress;
+
+            _dbContext.UserEntities.Update(userEntity);
+
+            var result = _dbContext.SaveChanges();
+
+            return result > SystemConstant.Zero;
+        }
 
         /// <summary>
         /// 绑定谷歌
@@ -450,8 +491,6 @@ namespace Auxiliary.Elves.Api.ApiService
             return result > SystemConstant.Zero;
         }
 
-
-
         /// <summary>
         /// 用户设置是否有效
         /// </summary>
@@ -476,54 +515,60 @@ namespace Auxiliary.Elves.Api.ApiService
 
             return result > SystemConstant.Zero;
         }
-
-        public bool RegisterKey(string userId, string verCode)
+      
+        public bool RegisterKey(string userName, int userNumber)
         {
-            var isAuthenticator = GoogleAuthenticatorHelper.VerifyTotpCode(userId, verCode);
+            //var isAuthenticator = GoogleAuthenticatorHelper.VerifyTotpCode(userId, verCode);
 
-            if (!isAuthenticator)
-                return false;
+            //if (!isAuthenticator)
+            //    return false;
 
-            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserId == userId && x.IsEnable == true);
+            var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName && x.IsEnable == true );
 
             if (userEntity == null)
                 return false;
 
-            Random _rnd = new Random();
-            HashSet<string> _used = new HashSet<string>();
+            var result = 0;
 
-            Random _rndKeyId = new Random();
-            HashSet<string> _usedKey = new HashSet<string>();
-
-            string userKey;
-            string userKeyId;
-
-            foreach (var item in _dbContext.UserKeyEntities.ToList())
+            for (int i = 0; i < userNumber; i++)
             {
-                _used.Add(item.Userkey);
-                _usedKey.Add(item.Userkeyid);
+                Random _rnd = new Random();
+                HashSet<string> _used = new HashSet<string>();
+
+                Random _rndKeyId = new Random();
+                HashSet<string> _usedKey = new HashSet<string>();
+
+                string userKey;
+                string userKeyId;
+
+                foreach (var item in _dbContext.UserKeyEntities.ToList())
+                {
+                    _used.Add(item.Userkey);
+                    _usedKey.Add(item.Userkeyid);
+                }
+
+
+                do
+                {
+                    userKeyId = CardGenerator.GenerateCardNumber(8);
+                } while (!_usedKey.Add(userKeyId));
+
+                do
+                {
+                    userKey = CardGenerator.GenerateCardNumber(6);
+                } while (!_used.Add(userKey));
+
+                UserKeyEntity keyEntity = new UserKeyEntity();
+                keyEntity.Userid = userEntity.UserName;
+                keyEntity.Userkeyid = userKeyId;
+                keyEntity.Userkey = userKey;
+                keyEntity.Isonline = false;
+                keyEntity.IsLock = false;
+                keyEntity.CreateTime = DateTime.Now;
+                _dbContext.UserKeyEntities.Add(keyEntity);
+                result = _dbContext.SaveChanges();
             }
-
-
-            do
-            {
-                userKeyId = CardGenerator.GenerateCardNumber(8);
-            } while (!_usedKey.Add(userKeyId));
-
-            do
-            {
-                userKey = CardGenerator.GenerateCardNumber(6);
-            } while (!_used.Add(userKey));
-
-            UserKeyEntity keyEntity = new UserKeyEntity();
-            keyEntity.Userid = userEntity.UserName;
-            keyEntity.Userkeyid = userKeyId;
-            keyEntity.Userkey = userKey;
-            keyEntity.Isonline = false;
-            keyEntity.IsLock = false;
-            keyEntity.CreateTime = DateTime.Now;
-            _dbContext.UserKeyEntities.Add(keyEntity);
-            var result = _dbContext.SaveChanges();
+           
             return result > SystemConstant.Zero;
         }
 

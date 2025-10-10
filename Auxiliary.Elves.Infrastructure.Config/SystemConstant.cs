@@ -77,6 +77,12 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// </summary>
         public const string AddPointsRoute = "v1/auxiliary/points/addpoints";
 
+
+        /// <summary>
+        /// 新增自定义积分
+        /// </summary>
+        public const string AddCustomPointsRoute = "v1/auxiliary/points/addcustompoints";
+
         /// <summary>
         /// 删除卡用户
         /// </summary>
@@ -103,6 +109,11 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// 绑定谷歌
         /// </summary>
         public const string BindGoogleRoute = "v1/auxiliary/account/binggoogle";
+
+        /// <summary>
+        /// 绑定地址
+        /// </summary>
+        public const string BindAddressRoute = "v1/auxiliary/account/bingaddress";
 
         /// <summary>
         /// 设置用户账号状态

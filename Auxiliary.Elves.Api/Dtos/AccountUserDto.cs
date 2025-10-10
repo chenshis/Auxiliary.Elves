@@ -41,5 +41,15 @@
         ///// 绑定谷歌账号
         ///// </summary>
         //public string UserBindAccount { get; set; }
+
+        /// <summary>
+        /// 绑定地址
+        /// </summary>
+        public string UserAddress { get; set; }
+
+        /// <summary>
+        /// 邀请人
+        /// </summary>
+        public string UserInviteUserName { get; set; }  
     }
 }

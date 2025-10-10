@@ -46,5 +46,10 @@ namespace Auxiliary.Elves.Domain.Entities
         /// 是否启用
         /// </summary>
         public bool IsEnable { get; set; }
+
+        /// <summary>
+        /// 地址
+        /// </summary>
+        public string UserAddress { get; set; }
     }
 }
