@@ -59,7 +59,8 @@ namespace Auxiliary.Elves.Api.ApiService
             {
                 Userid = userName,
                 UpdateTime = DateTime.Now,
-                Userpoints= SystemConstant.MaxPoints,
+                Userdata= DateTime.Now,
+                Userpoints = SystemConstant.MaxPoints,
                 IsExtract = false
             });
 
