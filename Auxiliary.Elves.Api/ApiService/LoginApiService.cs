@@ -440,6 +440,7 @@ namespace Auxiliary.Elves.Api.ApiService
             user.IsEnable = true;
             user.UserBindAccount = GoogleAuthenticatorHelper.GenerateSecretKey(userName);
             user.UserInviteUserName = userInviteUserName;
+            user.CreateTime = DateTime.Now;
             _dbContext.UserEntities.Add(user);
 
             var result = _dbContext.SaveChanges();
@@ -521,17 +522,19 @@ namespace Auxiliary.Elves.Api.ApiService
             return result > SystemConstant.Zero;
         }
       
-        public bool RegisterKey(string userName, int userNumber)
+        public List<UserDto> RegisterKey(string userName, int userNumber)
         {
             //var isAuthenticator = GoogleAuthenticatorHelper.VerifyTotpCode(userId, verCode);
 
             //if (!isAuthenticator)
             //    return false;
 
+            var resultUser = new List<UserDto>();
+
             var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName && x.IsEnable == true );
 
             if (userEntity == null)
-                return false;
+                return resultUser;
 
             var result = 0;
 
@@ -572,9 +575,19 @@ namespace Auxiliary.Elves.Api.ApiService
                 keyEntity.CreateTime = DateTime.Now;
                 _dbContext.UserKeyEntities.Add(keyEntity);
                 result = _dbContext.SaveChanges();
+
+                resultUser.Add(new UserDto
+                {
+                    Userid = keyEntity.Userid,
+                    Userkeyid = keyEntity.Userkeyid,
+                    Userkey = keyEntity.Userkey,
+                    Userkeylastdate = "",
+                    Isonline = keyEntity.Isonline,
+                    ExpireDate = ""
+                });
             }
            
-            return result > SystemConstant.Zero;
+            return resultUser;
         }
 
 

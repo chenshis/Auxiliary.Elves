@@ -198,7 +198,7 @@ namespace Auxiliary.Elves.Server.Controllers
         [HttpPost]
         [Route(SystemConstant.RegisterKeyRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public bool RegisterKey(string userName,int userNumber)
+        public List<UserDto> RegisterKey(string userName,int userNumber)
         {
             return LoginApiService.RegisterKey(userName, userNumber);
         }

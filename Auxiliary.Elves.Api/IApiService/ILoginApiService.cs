@@ -95,7 +95,7 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="userName">用户账号</param>
         /// <param name="userNumber">数量</param>
         /// <returns></returns>
-        bool RegisterKey(string userName, int userNumber);
+        List<UserDto> RegisterKey(string userName, int userNumber);
 
         /// <summary>
         /// 获取所有用户卡密信息
