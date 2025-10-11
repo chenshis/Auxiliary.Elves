@@ -71,6 +71,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                 _logger.LogError($"{Account.BindAccount}:拉取视频服务异常");
                 return await Task.FromResult<string>(null);
             }
+            _logger.LogInformation($"{Account.AccountId}:{apiResponse.Data}");
             return string.Concat(SystemConstant.ServerUrl, apiResponse.Data);
         }
 

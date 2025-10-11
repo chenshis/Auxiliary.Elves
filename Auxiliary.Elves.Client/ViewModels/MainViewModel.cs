@@ -84,7 +84,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             _eventAggregator.GetEvent<SubViewStatusEvent>().Subscribe(OnStatusMessageReceived, ThreadOption.UIThread);
             // 初始化定时器
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMinutes(1); // 设置间隔为60秒
+            _timer.Interval = TimeSpan.FromMinutes(10); // 设置间隔为60秒
             _timer.Tick += async (sender, e) => await Timer_Tick(sender, e); // 订阅Tick事件
             // 启动定时器
             _timer.Start();
