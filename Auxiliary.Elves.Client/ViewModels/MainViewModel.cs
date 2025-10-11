@@ -20,6 +20,7 @@ using System.Security.Principal;
 using HandyControl.Controls;
 using Prism.Events;
 using System.Windows.Threading;
+using System.Net.NetworkInformation;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -235,6 +236,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (Accounts != null && Accounts.Count > 0)
             {
                 HasData = true;
+                CanAddAccount = Accounts.Where(t => t.ExpireTime != "已到期").Count() <= 10;
             }
         }
 
@@ -376,9 +378,16 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
         }
 
+        private bool _canAddAccount;
+        public bool CanAddAccount
+        {
+            get => _canAddAccount;
+            set => SetProperty(ref _canAddAccount, value);
+        }
+
         public ICommand AddAccountCommand
         {
-            get => new DelegateCommand(SetAccount);
+            get => new DelegateCommand(SetAccount).ObservesCanExecute(() => CanAddAccount);
         }
 
         private void SetAccount()
