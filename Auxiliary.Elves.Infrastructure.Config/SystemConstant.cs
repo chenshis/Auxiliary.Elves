@@ -187,7 +187,7 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// </summary>
         public const string HostPort = "HostPort";
 
-        public const string ServerUrl = "http://47.238.158.162/";
+        public const string ServerUrl = "http://47.238.158.162:3000/";
 
         public const string Unauthorized = "权限认证失败";
         /// <summary>

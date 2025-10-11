@@ -43,7 +43,7 @@ namespace Auxiliary.Elves.Client
                 // 未授权 但是有token 则刷新token
                 if (responseResult.Code == (int)System.Net.HttpStatusCode.Unauthorized)
                 {
-                    var refreshResponse = RefreshToken();
+                    var refreshResponse = await RefreshToken();
                     if (refreshResponse.Code != 0)
                     {
                         _logger.LogError($"Post请求异常：{refreshResponse.Msg}");
@@ -76,7 +76,7 @@ namespace Auxiliary.Elves.Client
         /// 刷新token
         /// </summary>
         /// <returns></returns>
-        private ApiResponse<string> RefreshToken()
+        private async Task<ApiResponse<string>> RefreshToken()
         {
             ApiResponse<string> apiResponse = null;
             var token = _httpClient.DefaultRequestHeaders.Authorization?.Parameter;
@@ -90,10 +90,12 @@ namespace Auxiliary.Elves.Client
             }
             else
             {
+                _logger.LogInformation("token刷新");
                 StringContent stringContent = new StringContent(JsonConvert.SerializeObject(token), Encoding.UTF8, "application/json");
                 try
                 {
-                    HttpResponseMessage responseMessage = _httpClient.PostAsync(SystemConstant.RefreshTokenRoute, stringContent).Result;
+                    HttpResponseMessage responseMessage = await
+                        _httpClient.PostAsync(string.Concat(SystemConstant.LoginKeyRoute, "?key=admin"), null);
                     apiResponse = GetResponseCodeResult<string>(responseMessage);
                     if (apiResponse.Code == 0)
                     {

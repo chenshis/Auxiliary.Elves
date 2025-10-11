@@ -111,11 +111,9 @@ namespace Auxiliary.Elves.Client.Views
                     // 设置初始视频列表
                     await SendNextVideo(); // 发送第一个视频
                 }
-                else if (action == "videoError")
+                else if (action == "videoTimeout")
                 {
                     viewModel.RecordInfo($"视频播放错误: {data.error}");
-                    // 出错时重试下一个视频
-                    await Task.Delay(1000);
                     await SendNextVideo();
                 }
             }
@@ -135,7 +133,6 @@ namespace Auxiliary.Elves.Client.Views
                 if (!string.IsNullOrEmpty(videoAddress))
                 {
                     SendLoadVideoCommand(videoAddress);
-                    viewModel.RecordInfo($"发送视频地址: {videoAddress}");
                 }
                 else
                 {
@@ -209,8 +206,9 @@ namespace Auxiliary.Elves.Client.Views
                 SendMessageToWebView(new { action = "stop" });
             }
         }
-        public string HtmlContent { get; set; } =
- @"<!DOCTYPE html>
+
+
+        public string HtmlContent { get; set; } = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset=""utf-8"">
@@ -264,7 +262,6 @@ namespace Auxiliary.Elves.Client.Views
             overflow: hidden;
         }
     
-        /* 优化矩阵雨 - 使用Canvas替代DOM */
         .matrix-canvas {
             position: absolute;
             top: 0;
@@ -308,7 +305,7 @@ namespace Auxiliary.Elves.Client.Views
             right: 0;
             bottom: 0;
             background: #fff;
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -335,22 +332,29 @@ namespace Auxiliary.Elves.Client.Views
             animation: spin 1s ease-in-out infinite;
             margin: 0 auto 20px;
         }
+
+        .countdown-text {
+            font-size: 24px;
+            color: #333;
+            margin-top: 10px;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
     </style>
 </head>
 <body>
     <div class=""container"">
         <div class=""video-container"">
-            <video id=""videoPlayer"" preload=""auto"" autoplay muted></video>
+            <video id=""videoPlayer"" preload=""auto"" muted style=""display: none;""></video>
         
             <div class=""loading-screen"" id=""loadingScreen"">
                 <div class=""loading-content"">
                     <div class=""loading-spinner-white""></div>
-                    <div class=""loading-title"">正在获取任务...</div>
+                    <div class=""loading-title"" id=""loadingTitle"">正在获取任务…</div>
+                    <div class=""countdown-text"" id=""countdownText"" style=""display: none;""></div>
                 </div>
             </div>
         
             <div class=""settlement-screen"" id=""settlementScreen"">
-                <!-- 使用Canvas替代DOM矩阵雨 -->
                 <canvas class=""matrix-canvas"" id=""matrixCanvas""></canvas>
                 <div class=""processing-content"">
                     <div class=""processing-text"">任务正在处理…</div>
@@ -364,14 +368,18 @@ namespace Auxiliary.Elves.Client.Views
         let videoElement = document.getElementById('videoPlayer');
         let settlementScreen = document.getElementById('settlementScreen');
         let loadingScreen = document.getElementById('loadingScreen');
+        let loadingTitle = document.getElementById('loadingTitle');
+        let countdownText = document.getElementById('countdownText');
         let matrixCanvas = document.getElementById('matrixCanvas');
         let ctx = matrixCanvas.getContext('2d');
 
         let currentVideoUrl = null;
         let isVideoLoaded = false;
         let matrixAnimationId = null;
+        let countdownInterval = null;
+        let countdownSeconds = 0;
+        let isLoadingVideo = false; // 添加加载状态锁
 
-        // 优化矩阵雨 - 使用Canvas
         class MatrixRain {
             constructor(canvas) {
                 this.canvas = canvas;
@@ -388,7 +396,6 @@ namespace Auxiliary.Elves.Client.Views
                 this.canvas.width = window.innerWidth;
                 this.canvas.height = window.innerHeight;
                 
-                // 根据屏幕大小调整列数
                 const fontSize = 14;
                 this.columns = Math.floor(this.canvas.width / fontSize);
                 this.fontSize = fontSize;
@@ -404,7 +411,6 @@ namespace Auxiliary.Elves.Client.Views
             }
             
             draw() {
-                // 半透明黑色背景实现拖尾效果
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 
@@ -415,7 +421,6 @@ namespace Auxiliary.Elves.Client.Views
                     const x = i * this.fontSize;
                     const y = this.drops[i] * this.fontSize;
                     
-                    // 渐变颜色效果
                     if (y < this.canvas.height * 0.3) {
                         this.ctx.fillStyle = '#0f0';
                     } else if (y < this.canvas.height * 0.6) {
@@ -426,7 +431,6 @@ namespace Auxiliary.Elves.Client.Views
                     
                     this.ctx.fillText(text, x, y);
                     
-                    // 重置雨滴位置
                     if (y > this.canvas.height && Math.random() > 0.975) {
                         this.drops[i] = 0;
                     }
@@ -449,7 +453,6 @@ namespace Auxiliary.Elves.Client.Views
                     cancelAnimationFrame(this.animationId);
                     this.animationId = null;
                 }
-                // 清除画布
                 this.ctx.fillStyle = '#000';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
@@ -458,11 +461,62 @@ namespace Auxiliary.Elves.Client.Views
         const matrixRain = new MatrixRain(matrixCanvas);
 
         function showLoadingScreen() {
+            videoElement.style.display = 'none';
             loadingScreen.style.display = 'flex';
+            loadingTitle.style.display = 'block';
+            countdownText.style.display = 'none';
+            settlementScreen.style.display = 'none';
+            hideCountdown();
         }
 
         function hideLoadingScreen() {
             loadingScreen.style.display = 'none';
+            videoElement.style.display = 'block';
+            hideCountdown();
+        }
+
+        function showVideo() {
+            videoElement.style.display = 'block';
+            loadingScreen.style.display = 'none';
+            settlementScreen.style.display = 'none';
+            hideCountdown();
+        }
+
+        function showCountdown(seconds) {
+            countdownSeconds = seconds;
+            countdownText.style.display = 'block';
+            loadingTitle.style.display = 'none';
+            updateCountdownText();
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                countdownSeconds--;
+                updateCountdownText();
+                
+                if (countdownSeconds <= 0) {
+                    hideCountdown();
+                    notifyWPF('videoTimeout', {
+                        videoUrl: currentVideoUrl,
+                        error: '视频加载失败，自动切换到下一个视频'
+                    });
+                }
+            }, 1000);
+        }
+
+        function hideCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            countdownText.style.display = 'none';
+            loadingTitle.style.display = 'block';
+        }
+
+        function updateCountdownText() {
+            countdownText.textContent = `${countdownSeconds}秒后切换任务…`;
         }
 
         function initializePlayer() {
@@ -471,13 +525,14 @@ namespace Auxiliary.Elves.Client.Views
             videoElement.preload = ""auto"";
             videoElement.playbackRate = 1.0;
         
-            // 监听消息
+            showLoadingScreen();
+        
             window.chrome.webview.addEventListener('message', event => {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.action === 'loadVideo') {
                         console.log('收到加载视频命令:', data.videoUrl);
-                        if (data.videoUrl) {
+                        if (data.videoUrl && !isLoadingVideo) {
                             loadAndPlayVideo(data.videoUrl);
                         }
                     } else if (data.action === 'settlementResult') {
@@ -491,79 +546,119 @@ namespace Auxiliary.Elves.Client.Views
         }
     
         async function loadAndPlayVideo(videoUrl) {
-            if (!videoUrl) {
-                console.error('视频URL为空');
+            if (!videoUrl || isLoadingVideo) {
+                console.log('视频URL为空或正在加载中，跳过');
                 return;
             }
         
+            isLoadingVideo = true;
             currentVideoUrl = videoUrl;
             isVideoLoaded = false;
-        
+
             try {
-                showLoadingScreen();
                 console.log('开始加载视频:', videoUrl);
+                showLoadingScreen();
                 
-                // 停止可能的矩阵动画
                 matrixRain.stop();
+                hideCountdown();
                 
-                // 添加1秒延迟，避免加载太快
-                console.log('等待1秒避免加载太快...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                console.log('延迟结束，开始设置视频源');
-            
-                // 直接设置视频源，不通过blob转换
+                // 完全重置视频元素
+                videoElement.pause();
+                videoElement.removeAttribute('src');
+                videoElement.load();
+                
+                // 清除所有事件监听器
+                const newVideoElement = videoElement.cloneNode(true);
+                videoElement.parentNode.replaceChild(newVideoElement, videoElement);
+                videoElement = newVideoElement;
+                
+                // 设置新的视频源
                 videoElement.src = videoUrl;
-            
-                videoElement.onloadeddata = () => {
-                    console.log('视频加载完成，开始播放');
+                videoElement.preload = ""auto"";
+                videoElement.muted = true;
+
+                // 添加事件监听
+                videoElement.addEventListener('error', handleVideoError);
+                videoElement.addEventListener('canplaythrough', handleCanPlayThrough);
+                videoElement.addEventListener('ended', handleVideoEnded);
+
+                // 等待视频加载
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('视频加载超时'));
+                    }, 30000);
+
+                    videoElement.addEventListener('canplaythrough', () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+
+                    videoElement.addEventListener('error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('视频加载错误'));
+                    }, { once: true });
+                });
+
+                console.log('视频加载完成，开始播放');
+                
+                // 尝试播放
+                try {
+                    await videoElement.play();
+                    console.log('视频播放成功');
+                    showVideo();
                     isVideoLoaded = true;
-                    
-                    hideLoadingScreen();
                     
                     notifyWPF('videoReady', {
                         videoUrl: currentVideoUrl
                     });
                     
-                    // 强制播放
-                    videoElement.play().catch(e => {
-                        console.log('自动播放被阻止:', e);
-                        // 如果自动播放失败，显示控件让用户点击
-                        videoElement.controls = true;
+                } catch (playError) {
+                    console.log('自动播放失败，需要用户交互');
+                    videoElement.controls = true;
+                    showVideo();
+                    
+                    notifyWPF('videoReady', {
+                        videoUrl: currentVideoUrl,
+                        requiresUserInteraction: true
                     });
-                };
-            
-                videoElement.onended = () => {
-                    console.log('视频播放完成');
-                    showSettlementScreen();
-                };
-            
-                videoElement.onerror = (e) => {
-                    console.error('视频播放错误:', e);
-                    hideLoadingScreen();
-                    isVideoLoaded = false;
-                    notifyWPF('videoError', {
-                        error: '视频加载失败',
-                        videoUrl: currentVideoUrl
-                    });
-                };
+                }
 
             } catch (error) {
                 console.error('视频加载失败:', error);
-                hideLoadingScreen();
-                isVideoLoaded = false;
-                notifyWPF('videoError', {
-                    error: error.message,
-                    videoUrl: currentVideoUrl
-                });
+                handleLoadError(error.message);
+            } finally {
+                isLoadingVideo = false;
             }
         }
-    
+
+        function handleVideoError(event) {
+            console.error('视频加载错误:', videoElement.error);
+            handleLoadError(videoElement.error ? videoElement.error.message : '视频加载错误');
+        }
+
+        function handleCanPlayThrough() {
+            console.log('视频可以流畅播放');
+        }
+
+        function handleVideoEnded() {
+            console.log('视频播放完成');
+            showSettlementScreen();
+        }
+
+        function handleLoadError(errorMessage) {
+            showLoadingScreen();
+            isVideoLoaded = false;
+            showCountdown(10);
+            isLoadingVideo = false;
+        }
+
         function showSettlementScreen() {
             console.log('显示结算屏幕');
-            settlementScreen.style.display = 'flex';
+            videoElement.style.display = 'none';
             loadingScreen.style.display = 'none';
+            settlementScreen.style.display = 'flex';
+            hideCountdown();
         
-            // 使用优化的Canvas矩阵雨
             matrixRain.start();
         
             notifyWPF('settlementComplete', {
@@ -574,11 +669,11 @@ namespace Auxiliary.Elves.Client.Views
         function settlementResult(success) {
             console.log('处理结算结果:', success);
             
-            // 停止矩阵动画
             matrixRain.stop();
             
             if (success) {
                 settlementScreen.style.display = 'none';
+                showLoadingScreen();
                 notifyWPF('VideoEnd', {
                     videoUrl: currentVideoUrl
                 });
@@ -614,10 +709,12 @@ namespace Auxiliary.Elves.Client.Views
             }, 100);
         });
 
-        // 页面隐藏时停止动画以节省性能
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 matrixRain.stop();
+                if (!videoElement.paused) {
+                    videoElement.pause();
+                }
             } else if (settlementScreen.style.display === 'flex') {
                 matrixRain.start();
             }
@@ -625,5 +722,7 @@ namespace Auxiliary.Elves.Client.Views
     </script>
 </body>
 </html>";
+
+
     }
 }

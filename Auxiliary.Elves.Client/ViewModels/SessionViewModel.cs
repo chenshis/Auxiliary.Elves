@@ -71,6 +71,10 @@ namespace Auxiliary.Elves.Client.ViewModels
                 _logger.LogError($"{Account.BindAccount}:拉取视频服务异常");
                 return await Task.FromResult<string>(null);
             }
+            var originalString = apiResponse.Data;
+            string result = originalString.Length >= 8 ?
+                originalString.Substring(originalString.Length - 8) : originalString;
+            _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
             return string.Concat(SystemConstant.ServerUrl, apiResponse.Data);
         }
 
