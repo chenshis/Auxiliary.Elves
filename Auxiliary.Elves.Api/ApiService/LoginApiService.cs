@@ -459,7 +459,7 @@ namespace Auxiliary.Elves.Api.ApiService
 
             var userEntity = _dbContext.UserEntities.FirstOrDefault(x => x.UserName == userName);
 
-            if (userEntity == null || !string.IsNullOrWhiteSpace(userAddress))
+            if (userEntity == null || string.IsNullOrWhiteSpace(userAddress))
                 return false;
 
             userEntity.UserAddress = userAddress;
