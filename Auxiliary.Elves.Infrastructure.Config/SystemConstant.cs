@@ -18,6 +18,8 @@ namespace Auxiliary.Elves.Infrastructure.Config
 
         public const int Zero = 0;
 
+        public const string ExpireDateStatus = "已到期";
+
         /// <summary>
         /// 上传视频
         /// </summary>

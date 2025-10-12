@@ -208,7 +208,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 _dbContext.UserPointsRecordEntities.Where(x=>x.Userid==userName).ToList()
                 : _dbContext.UserPointsRecordEntities.ToList();
 
-            var pagedData = userPoints
+            var pagedData = userPoints.OrderByDescending(x=>x.Userdata)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();

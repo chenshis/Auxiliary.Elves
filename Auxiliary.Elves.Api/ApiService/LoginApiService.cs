@@ -205,10 +205,19 @@ namespace Auxiliary.Elves.Api.ApiService
                     Isonline = user.Isonline
                 };
 
-                if (!string.IsNullOrWhiteSpace(user.Userkeyip))
+                if (!string.IsNullOrWhiteSpace(user.Userkeyip)&& user.Userkeylastdate != null)
                 {
-                    DateTime expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
-                    userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
+
+                    if (expireDate > DateTime.Now)
+                    {
+                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        userInfo.ExpireDate = SystemConstant.ExpireDateStatus;
+                    }
+                    
                 }
 
                 userDtos.Add(userInfo);
@@ -233,21 +242,29 @@ namespace Auxiliary.Elves.Api.ApiService
 
             foreach (var user in userEntities)
             {
-                var userInfo = new UserDto 
+                var userInfo = new UserDto
                 {
                     Userkey = user.Userkey,
                     Userkeyid = user.Userkeyid,
-                    Userkeylastdate = user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userkeylastdate = user.Userkeylastdate != null ? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
                     Userid = user.Userid,
                     Isonline = user.Isonline,
                 };
 
-                DateTime expireDate;
-                expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
-                userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                if (!string.IsNullOrWhiteSpace(user.Userkeyip) && user.Userkeylastdate != null)
+                {
+                    DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                if (expireDate >= DateTime.Now)
-                    userDtos.Add(userInfo);
+                    if (expireDate > DateTime.Now)
+                    {
+                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        userInfo.ExpireDate = SystemConstant.ExpireDateStatus;
+                    }
+                }
+                userDtos.Add(userInfo);
             }
 
           
@@ -277,17 +294,26 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     Userkey = user.Userkey,
                     Userkeyid = user.Userkeyid,
-                    Userkeylastdate = user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Userkeylastdate = user.Userkeylastdate != null ? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
                     Userid = user.Userid,
                     Isonline = user.Isonline,
                 };
 
-                DateTime expireDate;
-                expireDate = user.CreateTime.AddDays(SystemConstant.MaxDay);
-                userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                if (!string.IsNullOrWhiteSpace(user.Userkeyip) && user.Userkeylastdate != null)
+                {
+                    DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                if (expireDate >= DateTime.Now)
-                    userDtos.Add(userInfo);
+                    if (expireDate > DateTime.Now)
+                    {
+                        userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        userInfo.ExpireDate = SystemConstant.ExpireDateStatus;
+                    }
+
+                }
+                userDtos.Add(userInfo);
             }
 
 
@@ -328,7 +354,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 });
             }
 
-            return userDtos;
+            return userDtos.OrderByDescending(x=>x.CreateTime).ToList();
         }
 
 

@@ -1,9 +1,12 @@
-﻿using Auxiliary.Elves.Api.IApiService;
+﻿using Auxiliary.Elves.Api.Dtos;
+using Auxiliary.Elves.Api.IApiService;
+using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Domain.Entities;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
 
@@ -13,11 +16,12 @@ namespace Auxiliary.Elves.Server.Controllers
     {
         public ILoginApiService LoginApiService { get; }
         private readonly ILogger<VideoController> _logger;
-
-        public VideoController(ILoginApiService loginApiService,ILogger<VideoController> logger)
+        private readonly AuxiliaryDbContext _dbContext;
+        public VideoController(ILoginApiService loginApiService, ILogger<VideoController> logger, AuxiliaryDbContext dbContext)
         {
             LoginApiService = loginApiService;
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -90,36 +94,63 @@ namespace Auxiliary.Elves.Server.Controllers
             return File(fileBytes, "application/octet-stream", fileName);
         }
 
-
         /// <summary>
         /// 获取视频地址
         /// </summary>
+        /// <param name="UserName">卡号</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.VideoVideoUrlRoute)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public async Task<string> GetVideoUrl()
+        public async Task<VideoDto> GetVideoUrl(string UserName)
         {
+            VideoDto video = new VideoDto();
+
+            if (string.IsNullOrWhiteSpace(UserName))
+                return video;
+
+            var user =
+               _dbContext.UserKeyEntities.FirstOrDefault(x => x.Userid == UserName);
+
+            if(user == null)
+                return video;
+
+            var expireDateStr = "";
+
+            if (!string.IsNullOrWhiteSpace(user.Userkeyip) && user.Userkeylastdate != null)
+            {
+                DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
+
+                if (expireDate > DateTime.Now)
+                {
+                    expireDateStr = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+                else
+                {
+                    expireDateStr = SystemConstant.ExpireDateStatus;
+                }
+            }
+
             var baseDic = AppDomain.CurrentDomain.BaseDirectory;
 
             var videoDirectory = Path.Combine(baseDic, "videos");
 
             if (!Directory.Exists(videoDirectory))
-                return "";
+                return video;
 
             var files = Directory.GetFiles(videoDirectory).Select(Path.GetFileName)
                      .ToList();
 
             if (!files.Any())
-                return "";
+                return video;
 
             var random = new Random();
             var index = random.Next(files.Count);
             var randomFile = files[index]; // 随机文件名
-            return randomFile;
-            
+
+            video.VideoExpireDate = expireDateStr;
+            video.VideoUrl = randomFile;
+            return video;
         }
-
-
     }
 }
