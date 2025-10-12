@@ -239,7 +239,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (Accounts != null && Accounts.Count > 0)
             {
                 HasData = true;
-                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() <= 10;
+                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() < 10;
             }
         }
 
@@ -330,7 +330,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
             else
             {
-                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() <= 10;
+                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() < 10;
             }
         }
 

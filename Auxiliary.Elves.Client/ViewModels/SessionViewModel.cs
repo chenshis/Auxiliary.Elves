@@ -81,10 +81,13 @@ namespace Auxiliary.Elves.Client.ViewModels
             else
             {
                 var originalString = apiResponse.Data.VideoUrl;
-                string result = originalString.Length >= 10 ?
-                    originalString.Substring(originalString.Length - 10) : originalString;
-                _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
-                return string.Concat(SystemConstant.ServerUrl, apiResponse.Data);
+                if (!string.IsNullOrWhiteSpace(originalString))
+                {
+                    string result = originalString.Length >= 10 ?
+                        originalString.Substring(originalString.Length - 10) : originalString;
+                    _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
+                }
+                return string.Concat(SystemConstant.ServerUrl, apiResponse.Data.VideoUrl);
             }
         }
 

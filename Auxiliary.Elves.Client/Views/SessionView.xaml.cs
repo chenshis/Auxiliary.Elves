@@ -130,17 +130,11 @@ namespace Auxiliary.Elves.Client.Views
             try
             {
                 var videoAddress = await viewModel.GetVideoAddressAsync();
-                if (!string.IsNullOrEmpty(videoAddress))
-                {
-                    SendLoadVideoCommand(videoAddress);
-                }
-                else
-                {
-                    viewModel.RecordInfo("获取视频地址为空");
-                }
+                SendLoadVideoCommand(videoAddress);
             }
             catch (Exception ex)
             {
+                SendLoadVideoCommand(null);
                 viewModel.RecordError(ex, "获取视频地址失败");
             }
         }
@@ -500,6 +494,10 @@ namespace Auxiliary.Elves.Client.Views
             countdownSeconds = seconds;
             countdownText.style.display = 'block';
             updateCountdownText();
+            const loadingTitle = document.querySelector('.loading-title');
+            if (loadingTitle) {
+                loadingTitle.style.display = 'none';
+            }
             
             if (countdownInterval) {
                 clearInterval(countdownInterval);
@@ -510,7 +508,11 @@ namespace Auxiliary.Elves.Client.Views
                 updateCountdownText();
                 
                 if (countdownSeconds <= 0) {
+                    if (loadingTitle) {
+                        loadingTitle.style.display = 'block';
+                    }
                     hideCountdown();
+                    showLoadingScreen();
                     notifyWPF('videoTimeout', {
                         videoUrl: currentVideoUrl,
                         error: '视频加载失败，自动切换到下一个视频'
@@ -546,6 +548,8 @@ namespace Auxiliary.Elves.Client.Views
                         console.log('收到加载视频命令:', data.videoUrl);
                         if (data.videoUrl && !isLoadingVideo) {
                             loadAndPlayVideo(data.videoUrl);
+                        }else{
+                            showCountdown(10);
                         }
                     } else if (data.action === 'settlementResult') {
                         console.log('收到结算结果:', data.success);
