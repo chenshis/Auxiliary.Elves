@@ -95,13 +95,15 @@ namespace Auxiliary.Elves.Server.Controllers
         /// <param name="userName">账号 可为空</param>
         /// <param name="pageNumber">当前页 必填</param>
         /// <param name="pageSize">每页条数 必填</param>
+        /// <param name="startTime">开始时间 可为空</param>
+        /// <param name="endTime">结束时间 可为空</param>
         /// <returns></returns>
         [HttpPost]
         [Route(SystemConstant.UserPointsRecord)]
         [Authorize(Roles = nameof(RoleEnum.Admin))]
-        public PointsPageDto GetRecordPoints(string userFeatureCode,string userName, int pageNumber,int pageSize)
+        public PointsPageDto GetRecordPoints(string userFeatureCode,string userName, int pageNumber,int pageSize,DateTime? startTime,DateTime? endTime)
         {
-            return PointsApiService.GetRecordPoints(userFeatureCode, userName, pageNumber,pageSize);
+            return PointsApiService.GetRecordPoints(userFeatureCode, userName, pageNumber,pageSize,startTime,endTime);
         }
 
       

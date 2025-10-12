@@ -110,7 +110,7 @@ namespace Auxiliary.Elves.Server.Controllers
                 return video;
 
             var user =
-               _dbContext.UserKeyEntities.FirstOrDefault(x => x.Userid == UserName);
+               _dbContext.UserKeyEntities.FirstOrDefault(x => x.Userkeyid == UserName);
 
             if(user == null)
                 return video;
