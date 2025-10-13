@@ -2,13 +2,6 @@
 using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -55,16 +48,30 @@ namespace Auxiliary.Elves.Api.ApiService
                  _dbContext.UserPointsEntities.Add(userModel);
             }
 
-            //记录积分记录
-            _dbContext.UserPointsRecordEntities.Add(new Domain.Entities.UserPointsRecordEntity
-            {
-                Userid = userName,
-                UpdateTime = DateTime.Now,
-                Userdata= DateTime.Now,
-                Userpoints = SystemConstant.MaxPoints,
-                IsExtract = false
-            });
+            var userPointsRecord = _dbContext.UserPointsRecordEntities.FirstOrDefault(t => t.Userid == userName 
+            && t.Userdata > DateTime.Now.AddHours(-1));
 
+            if (userPointsRecord != null)
+            {
+                userPointsRecord.Userpoints += SystemConstant.MaxPoints; 
+                userPointsRecord.UpdateTime = DateTime.Now;
+                //记录积分记录
+                _dbContext.UserPointsRecordEntities.Update(userPointsRecord);
+            }
+            else
+            {
+                //记录积分记录
+                _dbContext.UserPointsRecordEntities.Add(new Domain.Entities.UserPointsRecordEntity
+                {
+                    Userid = userName,
+                    UpdateTime = DateTime.Now,
+                    Userdata = DateTime.Now,
+                    Userpoints = SystemConstant.MaxPoints,
+                    IsExtract = false
+                });
+
+              
+            }
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
 
