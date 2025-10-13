@@ -3,6 +3,7 @@ using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -179,7 +180,7 @@ namespace Auxiliary.Elves.Api.ApiService
         /// 获取所有账号积分记录
         /// </summary>
         /// <returns></returns>
-        public PointsPageDto GetRecordPoints(string userFeatureCode, string userNames, int pageNumber, int pageSize)
+        public PointsPageDto GetRecordPoints(string userFeatureCode, string userNames, int pageNumber, int pageSize, DateTime? startTime, DateTime? endTime)
         {
             var result = new PointsPageDto
             {
@@ -208,7 +209,12 @@ namespace Auxiliary.Elves.Api.ApiService
                 _dbContext.UserPointsRecordEntities.Where(x=>x.Userid==userName).ToList()
                 : _dbContext.UserPointsRecordEntities.ToList();
 
-            var pagedData = userPoints
+            userPoints = userPoints.Where(x =>
+                        (!startTime.HasValue || x.Userdata >= startTime.Value) &&
+                        (!endTime.HasValue || x.Userdata <= endTime.Value)).ToList();
+
+
+            var pagedData = userPoints.OrderByDescending(x=>x.Userdata)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();

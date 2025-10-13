@@ -20,6 +20,7 @@ using System.Security.Principal;
 using HandyControl.Controls;
 using Prism.Events;
 using System.Windows.Threading;
+using System.Net.NetworkInformation;
 
 namespace Auxiliary.Elves.Client.ViewModels
 {
@@ -229,12 +230,16 @@ namespace Auxiliary.Elves.Client.ViewModels
                     Status = true
                 };
                 Accounts.Add(account);
-                SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
+                if (account.ExpireTime != SystemConstant.ExpireDateStatus)
+                {
+                    SessionViews[account] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(account);
+                }
 
             }
             if (Accounts != null && Accounts.Count > 0)
             {
                 HasData = true;
+                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() < 10;
             }
         }
 
@@ -267,14 +272,20 @@ namespace Auxiliary.Elves.Client.ViewModels
             m.Status = !m.Status;
             if (m.Status)
             {
+                if (m.ExpireTime == SystemConstant.ExpireDateStatus)
+                {
+                    m.Status = false;
+                    _logger.LogWarning($"{m.AccountId}账号已到期，无法启动播放软件");
+                    return;
+                }
                 if (SessionViews[m] != null)
                 {
-                    _logger.LogInformation($"{m.AccountId}实例信息存在，启动播放软件");
+                    _logger.LogInformation($"{m.AccountId}启动播放软件");
                     SessionViews[m].Start();
                 }
                 else
                 {
-                    _logger.LogInformation($"{m.AccountId}实例信息不存在，重新启动播放软件");
+                    _logger.LogInformation($"{m.AccountId}重新启动播放软件");
                     SessionViews[m] = (SessionView)_windowService.ShowWindow<SessionViewModel, AccountModel>(m);
                 }
             }
@@ -315,6 +326,11 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (Accounts == null || Accounts.Count() <= 0)
             {
                 HasData = false;
+                CanAddAccount = true;
+            }
+            else
+            {
+                CanAddAccount = Accounts.Where(t => t.ExpireTime != SystemConstant.ExpireDateStatus).Count() < 10;
             }
         }
 
@@ -376,9 +392,16 @@ namespace Auxiliary.Elves.Client.ViewModels
             }
         }
 
+        private bool _canAddAccount = true;
+        public bool CanAddAccount
+        {
+            get => _canAddAccount;
+            set => SetProperty(ref _canAddAccount, value);
+        }
+
         public ICommand AddAccountCommand
         {
-            get => new DelegateCommand(SetAccount);
+            get => new DelegateCommand(SetAccount).ObservesCanExecute(() => CanAddAccount);
         }
 
         private void SetAccount()

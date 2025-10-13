@@ -1,4 +1,5 @@
-﻿using Auxiliary.Elves.Client.Models;
+﻿using Auxiliary.Elves.Api.Dtos;
+using Auxiliary.Elves.Client.Models;
 using Auxiliary.Elves.Infrastructure.Config;
 using HandyControl.Controls;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -61,7 +62,7 @@ namespace Auxiliary.Elves.Client.ViewModels
         public async Task<string> GetVideoAddressAsync()
         {
             _logger.LogInformation($"{Account.AccountId}:拉取视频");
-            var apiResponse = await _httpClient.PostAsync<string>(SystemConstant.VideoVideoUrlRoute);
+            var apiResponse = await _httpClient.PostAsync<VideoDto>(string.Concat(SystemConstant.VideoVideoUrlRoute, $"?UserName={Account.AccountId}"));
             if (apiResponse == null)
             {
                 return await Task.FromResult<string>(null);
@@ -71,11 +72,23 @@ namespace Auxiliary.Elves.Client.ViewModels
                 _logger.LogError($"{Account.BindAccount}:拉取视频服务异常");
                 return await Task.FromResult<string>(null);
             }
-            var originalString = apiResponse.Data;
-            string result = originalString.Length >= 8 ?
-                originalString.Substring(originalString.Length - 8) : originalString;
-            _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
-            return string.Concat(SystemConstant.ServerUrl, apiResponse.Data);
+            if (apiResponse.Data.VideoExpireDate == SystemConstant.ExpireDateStatus)
+            {
+                Account.ExpireTime = SystemConstant.ExpireDateStatus;
+                _logger.LogWarning($"{Account.BindAccount}&{Account.AccountId}:{Account.ExpireTime}");
+                return null;
+            }
+            else
+            {
+                var originalString = apiResponse.Data.VideoUrl;
+                if (!string.IsNullOrWhiteSpace(originalString))
+                {
+                    string result = originalString.Length >= 10 ?
+                        originalString.Substring(originalString.Length - 10) : originalString;
+                    _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
+                }
+                return string.Concat(SystemConstant.ServerUrl, apiResponse.Data.VideoUrl);
+            }
         }
 
         public async Task<bool> UpdatePoints()

@@ -150,12 +150,16 @@
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource ButtonDanger}">
                                                         <Setter Property="Margin" Value="0,0,10,0"/>
+                                                        <Setter Property="IsEnabled" Value="True"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Status}" Value="True">
                                                                 <Setter Property="Content" Value="停止"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Status}" Value="false">
                                                                 <Setter Property="Content" Value="启动"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding ExpireTime}" Value="已到期">
+                                                                <Setter Property="IsEnabled" Value="False"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>

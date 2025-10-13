@@ -3,12 +3,6 @@ using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Auxiliary.Elves.Api.ApiService
 {

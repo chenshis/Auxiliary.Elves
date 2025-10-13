@@ -113,7 +113,7 @@ namespace Auxiliary.Elves.Client.Views
                 }
                 else if (action == "videoTimeout")
                 {
-                    viewModel.RecordInfo($"视频播放错误: {data.error}");
+                    viewModel.RecordInfo($"视频播放错误或者超时: {data.error}");
                     await SendNextVideo();
                 }
             }
@@ -130,17 +130,11 @@ namespace Auxiliary.Elves.Client.Views
             try
             {
                 var videoAddress = await viewModel.GetVideoAddressAsync();
-                if (!string.IsNullOrEmpty(videoAddress))
-                {
-                    SendLoadVideoCommand(videoAddress);
-                }
-                else
-                {
-                    viewModel.RecordInfo("获取视频地址为空");
-                }
+                SendLoadVideoCommand(videoAddress);
             }
             catch (Exception ex)
             {
+                SendLoadVideoCommand(null);
                 viewModel.RecordError(ex, "获取视频地址失败");
             }
         }
@@ -206,6 +200,7 @@ namespace Auxiliary.Elves.Client.Views
                 SendMessageToWebView(new { action = "stop" });
             }
         }
+
 
 
         public string HtmlContent { get; set; } = @"<!DOCTYPE html>
@@ -349,7 +344,7 @@ namespace Auxiliary.Elves.Client.Views
             <div class=""loading-screen"" id=""loadingScreen"">
                 <div class=""loading-content"">
                     <div class=""loading-spinner-white""></div>
-                    <div class=""loading-title"" id=""loadingTitle"">正在获取任务…</div>
+                    <div class=""loading-title"">正在获取任务…</div>
                     <div class=""countdown-text"" id=""countdownText"" style=""display: none;""></div>
                 </div>
             </div>
@@ -368,17 +363,18 @@ namespace Auxiliary.Elves.Client.Views
         let videoElement = document.getElementById('videoPlayer');
         let settlementScreen = document.getElementById('settlementScreen');
         let loadingScreen = document.getElementById('loadingScreen');
-        let loadingTitle = document.getElementById('loadingTitle');
         let countdownText = document.getElementById('countdownText');
         let matrixCanvas = document.getElementById('matrixCanvas');
         let ctx = matrixCanvas.getContext('2d');
 
         let currentVideoUrl = null;
+        let currentBlobUrl = null;
         let isVideoLoaded = false;
         let matrixAnimationId = null;
         let countdownInterval = null;
         let countdownSeconds = 0;
-        let isLoadingVideo = false; // 添加加载状态锁
+        let isLoadingVideo = false;
+        let currentXHR = null;
 
         class MatrixRain {
             constructor(canvas) {
@@ -460,11 +456,23 @@ namespace Auxiliary.Elves.Client.Views
 
         const matrixRain = new MatrixRain(matrixCanvas);
 
+        function cleanupBlobUrl() {
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            }
+        }
+
+        function cancelCurrentDownload() {
+            if (currentXHR) {
+                currentXHR.abort();
+                currentXHR = null;
+            }
+        }
+
         function showLoadingScreen() {
             videoElement.style.display = 'none';
             loadingScreen.style.display = 'flex';
-            loadingTitle.style.display = 'block';
-            countdownText.style.display = 'none';
             settlementScreen.style.display = 'none';
             hideCountdown();
         }
@@ -485,8 +493,11 @@ namespace Auxiliary.Elves.Client.Views
         function showCountdown(seconds) {
             countdownSeconds = seconds;
             countdownText.style.display = 'block';
-            loadingTitle.style.display = 'none';
             updateCountdownText();
+            const loadingTitle = document.querySelector('.loading-title');
+            if (loadingTitle) {
+                loadingTitle.style.display = 'none';
+            }
             
             if (countdownInterval) {
                 clearInterval(countdownInterval);
@@ -497,7 +508,11 @@ namespace Auxiliary.Elves.Client.Views
                 updateCountdownText();
                 
                 if (countdownSeconds <= 0) {
+                    if (loadingTitle) {
+                        loadingTitle.style.display = 'block';
+                    }
                     hideCountdown();
+                    showLoadingScreen();
                     notifyWPF('videoTimeout', {
                         videoUrl: currentVideoUrl,
                         error: '视频加载失败，自动切换到下一个视频'
@@ -512,7 +527,6 @@ namespace Auxiliary.Elves.Client.Views
                 countdownInterval = null;
             }
             countdownText.style.display = 'none';
-            loadingTitle.style.display = 'block';
         }
 
         function updateCountdownText() {
@@ -534,6 +548,8 @@ namespace Auxiliary.Elves.Client.Views
                         console.log('收到加载视频命令:', data.videoUrl);
                         if (data.videoUrl && !isLoadingVideo) {
                             loadAndPlayVideo(data.videoUrl);
+                        }else{
+                            showCountdown(10);
                         }
                     } else if (data.action === 'settlementResult') {
                         console.log('收到结算结果:', data.success);
@@ -544,10 +560,41 @@ namespace Auxiliary.Elves.Client.Views
                 }
             });
         }
+
+        function preloadVideoWithBlob(videoUrl) {
+            return new Promise((resolve, reject) => {
+                currentXHR = new XMLHttpRequest();
+                currentXHR.open('GET', videoUrl, true);
+                currentXHR.responseType = 'blob';
+                
+                currentXHR.onload = function() {
+                    if (currentXHR.status === 200) {
+                        const blob = currentXHR.response;
+                        const blobUrl = URL.createObjectURL(blob);
+                        resolve(blobUrl);
+                    } else {
+                        reject(new Error('下载失败'));
+                    }
+                    currentXHR = null;
+                };
+                
+                currentXHR.onerror = function() {
+                    reject(new Error('网络错误'));
+                    currentXHR = null;
+                };
+                
+                currentXHR.ontimeout = function() {
+                    reject(new Error('下载超时'));
+                    currentXHR = null;
+                };
+                
+                currentXHR.timeout = 60000;
+                currentXHR.send();
+            });
+        }
     
         async function loadAndPlayVideo(videoUrl) {
             if (!videoUrl || isLoadingVideo) {
-                console.log('视频URL为空或正在加载中，跳过');
                 return;
             }
         
@@ -556,55 +603,55 @@ namespace Auxiliary.Elves.Client.Views
             isVideoLoaded = false;
 
             try {
-                console.log('开始加载视频:', videoUrl);
                 showLoadingScreen();
                 
                 matrixRain.stop();
                 hideCountdown();
                 
-                // 完全重置视频元素
+                cleanupBlobUrl();
+                cancelCurrentDownload();
+                
                 videoElement.pause();
-                videoElement.removeAttribute('src');
+                videoElement.src = '';
                 videoElement.load();
                 
-                // 清除所有事件监听器
-                const newVideoElement = videoElement.cloneNode(true);
-                videoElement.parentNode.replaceChild(newVideoElement, videoElement);
-                videoElement = newVideoElement;
+                // 使用Blob完整下载
+                const blobUrl = await preloadVideoWithBlob(videoUrl);
+                currentBlobUrl = blobUrl;
                 
-                // 设置新的视频源
-                videoElement.src = videoUrl;
-                videoElement.preload = ""auto"";
-                videoElement.muted = true;
+                videoElement.src = blobUrl;
 
-                // 添加事件监听
-                videoElement.addEventListener('error', handleVideoError);
-                videoElement.addEventListener('canplaythrough', handleCanPlayThrough);
-                videoElement.addEventListener('ended', handleVideoEnded);
-
-                // 等待视频加载
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => {
-                        reject(new Error('视频加载超时'));
-                    }, 30000);
-
-                    videoElement.addEventListener('canplaythrough', () => {
-                        clearTimeout(timeout);
-                        resolve();
-                    }, { once: true });
-
-                    videoElement.addEventListener('error', () => {
-                        clearTimeout(timeout);
-                        reject(new Error('视频加载错误'));
-                    }, { once: true });
+                    let hasResolved = false;
+                    
+                    const onCanPlay = () => {
+                        if (!hasResolved) {
+                            hasResolved = true;
+                            videoElement.removeEventListener('canplaythrough', onCanPlay);
+                            videoElement.removeEventListener('error', onError);
+                            resolve();
+                        }
+                    };
+                    
+                    const onError = (e) => {
+                        if (!hasResolved) {
+                            hasResolved = true;
+                            videoElement.removeEventListener('canplaythrough', onCanPlay);
+                            videoElement.removeEventListener('error', onError);
+                            reject(new Error('视频加载错误'));
+                        }
+                    };
+                    
+                    videoElement.addEventListener('canplaythrough', onCanPlay);
+                    videoElement.addEventListener('error', onError);
+                    
+                    if (videoElement.readyState >= 4) {
+                        onCanPlay();
+                    }
                 });
-
-                console.log('视频加载完成，开始播放');
                 
-                // 尝试播放
                 try {
                     await videoElement.play();
-                    console.log('视频播放成功');
                     showVideo();
                     isVideoLoaded = true;
                     
@@ -613,7 +660,6 @@ namespace Auxiliary.Elves.Client.Views
                     });
                     
                 } catch (playError) {
-                    console.log('自动播放失败，需要用户交互');
                     videoElement.controls = true;
                     showVideo();
                     
@@ -623,37 +669,25 @@ namespace Auxiliary.Elves.Client.Views
                     });
                 }
 
+                videoElement.onended = () => {
+                    cleanupBlobUrl();
+                    showSettlementScreen();
+                };
+
             } catch (error) {
-                console.error('视频加载失败:', error);
                 handleLoadError(error.message);
             } finally {
                 isLoadingVideo = false;
             }
         }
 
-        function handleVideoError(event) {
-            console.error('视频加载错误:', videoElement.error);
-            handleLoadError(videoElement.error ? videoElement.error.message : '视频加载错误');
-        }
-
-        function handleCanPlayThrough() {
-            console.log('视频可以流畅播放');
-        }
-
-        function handleVideoEnded() {
-            console.log('视频播放完成');
-            showSettlementScreen();
-        }
-
         function handleLoadError(errorMessage) {
             showLoadingScreen();
             isVideoLoaded = false;
             showCountdown(10);
-            isLoadingVideo = false;
         }
-
+    
         function showSettlementScreen() {
-            console.log('显示结算屏幕');
             videoElement.style.display = 'none';
             loadingScreen.style.display = 'none';
             settlementScreen.style.display = 'flex';
@@ -667,8 +701,6 @@ namespace Auxiliary.Elves.Client.Views
         }
     
         function settlementResult(success) {
-            console.log('处理结算结果:', success);
-            
             matrixRain.stop();
             
             if (success) {
@@ -680,7 +712,6 @@ namespace Auxiliary.Elves.Client.Views
             } else {
                 setTimeout(() => {
                     settlementScreen.style.display = 'none';
-                    console.log('结算失败，重新播放视频');
                     if (currentVideoUrl) {
                         loadAndPlayVideo(currentVideoUrl);
                     }
@@ -695,10 +726,7 @@ namespace Auxiliary.Elves.Client.Views
                     timestamp: new Date().toISOString(),
                     ...data
                 };
-                console.log('发送消息到WPF:', message);
                 window.chrome.webview.postMessage(JSON.stringify(message));
-            } else {
-                console.warn('WebView2不可用，无法发送消息');
             }
         }
     
@@ -719,10 +747,14 @@ namespace Auxiliary.Elves.Client.Views
                 matrixRain.start();
             }
         });
+
+        window.addEventListener('beforeunload', () => {
+            cleanupBlobUrl();
+            cancelCurrentDownload();
+        });
     </script>
 </body>
 </html>";
-
 
     }
 }
