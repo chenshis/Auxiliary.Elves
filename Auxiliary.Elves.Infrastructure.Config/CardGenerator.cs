@@ -9,8 +9,8 @@ namespace Auxiliary.Elves.Infrastructure.Config
     public static class CardGenerator
     {
         private static readonly Random random = new Random();
-        private const string Letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        private const string LettersAndDigits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private const string Letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        private const string LettersAndDigits = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
         /// <summary>
         /// 生成单个卡号（8位：大写字母+数字）
