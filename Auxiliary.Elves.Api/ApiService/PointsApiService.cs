@@ -2,6 +2,7 @@
 using Auxiliary.Elves.Api.IApiService;
 using Auxiliary.Elves.Domain;
 using Auxiliary.Elves.Infrastructure.Config;
+using Microsoft.EntityFrameworkCore;
 
 namespace Auxiliary.Elves.Api.ApiService
 {
@@ -48,8 +49,16 @@ namespace Auxiliary.Elves.Api.ApiService
                  _dbContext.UserPointsEntities.Add(userModel);
             }
 
-            var userPointsRecord = _dbContext.UserPointsRecordEntities.FirstOrDefault(t => t.Userid == userName 
-            && Convert.ToDateTime(t.Userdata.ToString("yyyy-MM-dd HH:00:00")) == Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")));
+
+            var now = DateTime.Now;
+            var start = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
+            var end = start.AddHours(1);
+
+            var userPointsRecord = _dbContext.UserPointsRecordEntities
+    .FirstOrDefault(u => u.Userid == userName
+             && u.Userdata >= start
+             && u.Userdata < end);
+
 
             if (userPointsRecord != null)
             {
