@@ -82,7 +82,7 @@ namespace Auxiliary.Elves.Client.ViewModels
             this._eventAggregator = eventAggregator;
             Accounts = new ObservableCollection<AccountModel>();
             SessionViews = new Dictionary<AccountModel, SessionView>();
-            _eventAggregator.GetEvent<SubViewStatusEvent>().Subscribe(OnStatusMessageReceived, ThreadOption.UIThread);
+            _eventAggregator.GetEvent<SubViewStatusEvent>().Subscribe(async (t) => await OnStatusMessageReceived(t), ThreadOption.UIThread);
             // 初始化定时器
             _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromMinutes(10); // 设置间隔为60秒
@@ -96,15 +96,18 @@ namespace Auxiliary.Elves.Client.ViewModels
             await GetAnnouncement();
         }
 
-        private void OnStatusMessageReceived(StatusMessage message)
+        private async Task OnStatusMessageReceived(StatusMessage message)
         {
             if (SessionViews != null && SessionViews.ContainsKey(message.Message))
             {
                 SessionViews[message.Message] = null;
                 message.Message.Status = false;
             }
+            var accountId = message.Message.AccountId;
+            var apiResponse = await _httpClient.PostAsync<bool>(
+                 string.Concat(SystemConstant.UpdateUserKeyRunRoute, $"?userkeyidserId={accountId}&isRun=false"));
             // 处理接收到的消息，更新UI或执行其他逻辑
-            _logger.LogInformation($"{message.Timestamp:HH:mm:ss} 收到来自{message.Message}消息：Close");
+            _logger.LogInformation($"{message.Timestamp:HH:mm:ss} 收到来自{accountId}消息：Close,离线：{apiResponse.Data}");
         }
 
         private async Task StartHost()
