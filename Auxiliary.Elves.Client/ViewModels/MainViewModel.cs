@@ -439,12 +439,21 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public ICommand WindowClosingCommand
         {
-            get => new DelegateCommand<CancelEventArgs>((e) =>
+            get => new DelegateCommand<CancelEventArgs>(async (e) =>
             {
                 if (SessionViews != null && SessionViews.Count > 0)
                 {
                     foreach (var item in SessionViews)
                     {
+                        try
+                        {
+                            await _httpClient.PostAsync<bool>(
+string.Concat(SystemConstant.UpdateUserKeyRunRoute, $"?userkeyidserId={item.Key.AccountId}&isRun=false"));
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
                         item.Value?.Close();
                     }
                     SessionViews.Clear();
