@@ -49,7 +49,7 @@ namespace Auxiliary.Elves.Api.ApiService
             }
 
             var userPointsRecord = _dbContext.UserPointsRecordEntities.FirstOrDefault(t => t.Userid == userName 
-            && t.Userdata > DateTime.Now.AddHours(-1));
+            && Convert.ToDateTime(t.Userdata.ToString("yyyy-MM-dd HH:00:00")) == Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")));
 
             if (userPointsRecord != null)
             {
@@ -65,7 +65,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     Userid = userName,
                     UpdateTime = DateTime.Now,
-                    Userdata = DateTime.Now,
+                    Userdata = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")),
                     Userpoints = SystemConstant.MaxPoints,
                     IsExtract = false
                 });
@@ -106,7 +106,7 @@ namespace Auxiliary.Elves.Api.ApiService
             {
                 Userid = userName,
                 Userpoints = points,
-                Userdata = DateTime.Now,
+                Userdata = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")),
                 IsExtract = true
             });
             return _dbContext.SaveChanges() > SystemConstant.Zero;
@@ -132,7 +132,7 @@ namespace Auxiliary.Elves.Api.ApiService
             return userPointsRecords.Select(x => new PointsDto
             {
                 Userpoints = x.Userpoints,
-                UserPointsDate = x.Userdata.ToString("yyyy-MM-dd HH:mm:ss"),
+                UserPointsDate = x.Userdata.ToString("yyyy-MM-dd HH:00:00"),
                 IsExtract = x.IsExtract
             }).ToList();
         }
@@ -145,17 +145,17 @@ namespace Auxiliary.Elves.Api.ApiService
         /// <returns></returns>
         public PointsDto GetPoints(string userName)
         {
-            if (string.IsNullOrWhiteSpace(userName) )
+            if (string.IsNullOrWhiteSpace(userName))
                 return new PointsDto();
 
-            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t =>  t.Userid == userName);
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userid == userName);
 
             if (userEntity == null)
                 return new PointsDto();
 
             var userPoints = _dbContext.UserPointsEntities.FirstOrDefault(t => t.Userid == userName);
 
-            return new PointsDto { UserName=userPoints.Userid, Userpoints = userPoints.Userpoints, UserPointsDate= userPoints.UpdateTime.ToString("yyyy-MM-dd HH:mm:ss") };
+            return new PointsDto { UserName = userPoints.Userid, Userpoints = userPoints.Userpoints, UserPointsDate = userPoints.UpdateTime.ToString("yyyy-MM-dd HH:mm:ss") };
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     UserName = point.Userid,
                     Userpoints = point.Userpoints,
-                    UserPointsDate = point.Userdata.ToString("yyyy-MM-dd HH:mm:ss"),
+                    UserPointsDate = point.Userdata.ToString("yyyy-MM-dd HH:00:00"),
                     IsExtract=point.IsExtract
                 });
             }
