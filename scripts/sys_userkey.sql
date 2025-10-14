@@ -10,6 +10,7 @@ CREATE TABLE sys_userkey(
     `UserKeyBindAccount` VARCHAR(100) COMMENT '绑定谷歌账号',
     `UserkeyLastDate` DATETIME COMMENT '最后登录日期',
     `IsOnline` BOOLEAN COMMENT '是否在线',
+    `IsRun` BOOLEAN COMMENT '是否退出',
     `IsLock` BOOLEAN COMMENT '是否锁定',
     `CreateUser` VARCHAR(50) COMMENT '创建人',
     `CreateTime` DATETIME COMMENT '创建时间',

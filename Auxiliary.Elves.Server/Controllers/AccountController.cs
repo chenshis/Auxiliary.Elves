@@ -231,7 +231,7 @@ namespace Auxiliary.Elves.Server.Controllers
 
 
         /// <summary>
-        /// 根据卡账号删除
+        /// 退出登录
         /// </summary>
         /// <param name="userkeyidserId"></param>
         /// <returns></returns>
@@ -243,6 +243,22 @@ namespace Auxiliary.Elves.Server.Controllers
             return LoginApiService.DeleteUser(userkeyidserId);
         }
 
+
+        /// <summary>
+        /// 修改运行状态
+        /// </summary>
+        /// <param name="userkeyidserId">卡号</param>
+        /// <param name="isRun">是否运行</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route(SystemConstant.UpdateUserKeyRunRoute)]
+        [Authorize(Roles = nameof(RoleEnum.Admin))]
+        public bool UpdateUserKeyRun(string userkeyidserId,bool isRun)
+        {
+            return LoginApiService.UpdateUserKeyRun(userkeyidserId, isRun);
+        }
+
+        
         /// <summary>
         /// 根据mac查找所有卡账号
         /// </summary>

@@ -172,6 +172,23 @@ namespace Auxiliary.Elves.Api.ApiService
             return _dbContext.SaveChanges() > SystemConstant.Zero;
         }
 
+        public bool UpdateUserKeyRun(string userkeyid, bool isRun)
+        {
+            if (string.IsNullOrWhiteSpace(userkeyid))
+                return false;
+
+            var userEntity = _dbContext.UserKeyEntities.FirstOrDefault(t => t.Userkeyid == userkeyid);
+
+            if (userEntity == null)
+                return false;
+
+            userEntity.IsRun = isRun;
+
+            _dbContext.UserKeyEntities.Update(userEntity);
+
+            return _dbContext.SaveChanges() > SystemConstant.Zero;
+        }
+
         public List<UserDto> GetAllUserKey(string userFeatureCode)
         {
             var userDtos = new List<UserDto>();
@@ -202,6 +219,7 @@ namespace Auxiliary.Elves.Api.ApiService
                     Userkeyid = user.Userkeyid,
                     Userkeylastdate = user.Userkeylastdate!=null? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss"):"",
                     Userid = user.Userid,
+                    IsRun=user.IsRun,
                     Isonline = user.Isonline
                 };
 
@@ -248,6 +266,7 @@ namespace Auxiliary.Elves.Api.ApiService
                     Userkeyid = user.Userkeyid,
                     Userkeylastdate = user.Userkeylastdate != null ? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
                     Userid = user.Userid,
+                    IsRun=user.IsRun,
                     Isonline = user.Isonline,
                 };
 
@@ -296,6 +315,7 @@ namespace Auxiliary.Elves.Api.ApiService
                     Userkeyid = user.Userkeyid,
                     Userkeylastdate = user.Userkeylastdate != null ? user.Userkeylastdate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
                     Userid = user.Userid,
+                    IsRun=user.IsRun,
                     Isonline = user.Isonline,
                 };
 
@@ -396,7 +416,11 @@ namespace Auxiliary.Elves.Api.ApiService
                 userEntity.Isonline = true;
             }
 
+            if (userEntity.Isonline)
+                userEntity.IsRun = true;
+            
             userEntity.Userkeyip = accountRequest.Mac;
+
             _dbContext.UserKeyEntities.Update(userEntity);
 
             var result = _dbContext.SaveChanges();
@@ -597,6 +621,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 keyEntity.Userkeyid = userKeyId;
                 keyEntity.Userkey = userKey;
                 keyEntity.Isonline = false;
+                keyEntity.IsRun = false;
                 keyEntity.IsLock = false;
                 keyEntity.CreateTime = DateTime.Now;
                 _dbContext.UserKeyEntities.Add(keyEntity);
@@ -608,6 +633,7 @@ namespace Auxiliary.Elves.Api.ApiService
                     Userkeyid = keyEntity.Userkeyid,
                     Userkey = keyEntity.Userkey,
                     Userkeylastdate = "",
+                    IsRun= keyEntity.IsRun,
                     Isonline = keyEntity.Isonline,
                     ExpireDate = ""
                 });

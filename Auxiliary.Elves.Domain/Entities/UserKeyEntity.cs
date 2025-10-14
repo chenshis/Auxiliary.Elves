@@ -50,5 +50,10 @@ namespace Auxiliary.Elves.Domain.Entities
         /// 是否锁定
         /// </summary>
         public bool IsLock { get; set; }
+
+        /// <summary>
+        /// 是否运行
+        /// </summary>
+        public bool IsRun { get; set; } 
     }
 }

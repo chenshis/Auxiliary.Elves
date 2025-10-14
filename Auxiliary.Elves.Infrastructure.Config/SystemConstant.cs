@@ -88,7 +88,13 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// <summary>
         /// 删除卡用户
         /// </summary>
-        public const string DelUserRoute = "v1/auxiliary/account/deleteuser";   
+        public const string DelUserRoute = "v1/auxiliary/account/deleteuser";
+
+        /// <summary>
+        /// 修改卡用户运行状态
+        /// </summary>
+        public const string UpdateUserKeyRunRoute = "v1/auxiliary/account/updateuserkeyrun";
+
         /// <summary>
         /// mac获取卡用户
         /// </summary>

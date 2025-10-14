@@ -131,5 +131,12 @@ namespace Auxiliary.Elves.Api.IApiService
         /// <param name="Userkeyid"></param>
         /// <returns></returns>
         bool DeleteUser(string userkeyid);
+
+        /// <summary>
+        /// 修改运行状态
+        /// </summary>
+        /// <param name="userkeyidserId"></param>
+        /// <returns></returns>
+        bool UpdateUserKeyRun(string userkeyidserId,bool isRun);
     }
 }
