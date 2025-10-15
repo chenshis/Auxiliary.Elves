@@ -1,10 +1,10 @@
 ; -- 辅助精灵安装脚本 --
-#define MyAppName "Auxiliary Elves"
+#define MyAppName "辅助精灵"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Your Company"
 #define MyAppExeName "Auxiliary.Elves.Client.exe"
-#define SourcePath "D:\Workspace\Axu\Auxiliary.Elves.Client\bin\Release\net6.0-windows\"
-#define IconPath "D:\Workspace\Axu\Auxiliary.Elves.Client\Assets\logo.ico"
+#define SourcePath "Auxiliary.Elves.Client\bin\Release\net6.0-windows\"
+#define IconPath "Auxiliary.Elves.Client\Assets\logo.ico"
 #define DotNetRuntimeInstaller "windowsdesktop-runtime-6.0.36-win-x64.exe"
 #define DotNetAspNetCoreRuntime "aspnetcore-runtime-6.0.36-win-x64.exe"
 
