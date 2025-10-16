@@ -486,7 +486,7 @@ namespace Auxiliary.Elves.Client.Views
             hideCountdown();
         }
 
-        function showCountdown(seconds) {
+        function showCountdown(seconds,errorMessage) {
             countdownSeconds = seconds;
             countdownText.style.display = 'block';
             updateCountdownText();
@@ -511,7 +511,7 @@ namespace Auxiliary.Elves.Client.Views
                     showLoadingScreen();
                     notifyWPF('videoTimeout', {
                         videoUrl: currentVideoUrl,
-                        error: '视频加载失败，自动切换到下一个视频'
+                        error: errorMessage
                     });
                 }
             }, 1000);
@@ -545,7 +545,7 @@ namespace Auxiliary.Elves.Client.Views
                         if (data.videoUrl) {
                             loadAndPlayVideo(data.videoUrl);
                         }else{
-                            showCountdown(10);
+                            showCountdown(10,'地址不正确');
                         }
                     } else if (data.action === 'settlementResult') {
                         console.log('收到结算结果:', data.success);
@@ -679,7 +679,7 @@ namespace Auxiliary.Elves.Client.Views
         function handleLoadError(errorMessage) {
             showLoadingScreen();
             isVideoLoaded = false;
-            showCountdown(10);
+            showCountdown(10,errorMessage);
         }
     
         function showSettlementScreen() {
