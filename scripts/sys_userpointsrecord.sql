@@ -6,7 +6,7 @@ CREATE TABLE sys_userpointsrecord(
     `UserId` VARCHAR(50) NOT NULL COMMENT '账号唯一编码',
     `UserData` DATETIME COMMENT '积分日期',
     `UserPoints` INT COMMENT '积分',
-    `IsExtract` BOOLEAN COMMENT '是否启用',
+    `IsExtract` BOOLEAN COMMENT '是否提取',
     `CreateUser` VARCHAR(50) COMMENT '创建人',
     `CreateTime` DATETIME COMMENT '创建时间',
     `UpdateUser` VARCHAR(50) COMMENT '修改人',
