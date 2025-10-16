@@ -557,37 +557,44 @@ namespace Auxiliary.Elves.Client.Views
             });
         }
 
-        function preloadVideoWithBlob(videoUrl) {
-            return new Promise((resolve, reject) => {
-                currentXHR = new XMLHttpRequest();
-                currentXHR.open('GET', videoUrl, true);
-                currentXHR.responseType = 'blob';
-                
-                currentXHR.onload = function() {
-                    if (currentXHR.status === 200) {
-                        const blob = currentXHR.response;
-                        const blobUrl = URL.createObjectURL(blob);
-                        resolve(blobUrl);
-                    } else {
-                        reject(new Error('下载失败'));
-                    }
-                    currentXHR = null;
-                };
-                
-                currentXHR.onerror = function() {
-                    reject(new Error('网络错误'));
-                    currentXHR = null;
-                };
-                
-                currentXHR.ontimeout = function() {
-                    reject(new Error('下载超时'));
-                    currentXHR = null;
-                };
-                
-                currentXHR.timeout = 60000;
-                currentXHR.send();
-            });
+     function preloadVideoWithBlob(videoUrl) {
+    return new Promise((resolve, reject) => {
+        // 先清理之前的请求
+        if (currentXHR) {
+            currentXHR.abort();
+            currentXHR = null;
         }
+        
+        currentXHR = new XMLHttpRequest();
+        currentXHR.open('GET', videoUrl, true);
+        currentXHR.responseType = 'blob';
+        
+        currentXHR.onload = function() {
+            if (currentXHR && currentXHR.status === 200) {
+                const blob = currentXHR.response;
+                const blobUrl = URL.createObjectURL(blob);
+                currentXHR = null; // 成功完成，立即清理
+                resolve(blobUrl);
+            } else {
+                currentXHR = null; // 失败也要清理
+                reject(new Error('下载失败'));
+            }
+        };
+        
+        currentXHR.onerror = function() {
+            currentXHR = null; // 确保清理
+            reject(new Error('网络错误'));
+        };
+        
+        currentXHR.ontimeout = function() {
+            currentXHR = null; // 确保清理
+            reject(new Error('下载超时'));
+        };
+        
+        currentXHR.timeout = 80000;
+        currentXHR.send();
+    });
+}
     
         async function loadAndPlayVideo(videoUrl) {
             if (!videoUrl) {
