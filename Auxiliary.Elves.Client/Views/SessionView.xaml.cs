@@ -81,8 +81,6 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private int _timeoutCount = 0;
-
         private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var webView = sender as WebView2;
@@ -95,12 +93,10 @@ namespace Auxiliary.Elves.Client.Views
                 string action = data.action.ToString();
                 if (action == "pageReady")
                 {
-                    _timeoutCount = 0;
                     await SendNextVideo(); // 发送第一个视频
                 }
                 else if (action == "settlementComplete")
                 {
-                    _timeoutCount = 0;
                     // 执行结算任务
                     var success = await viewModel.UpdatePoints();
                     var nextSec = _random.Next(10, 20);
@@ -114,14 +110,7 @@ namespace Auxiliary.Elves.Client.Views
                 }
                 else if (action == "videoTimeout")
                 {
-                    if (_timeoutCount >= 5)
-                    {
-                        viewModel.ExecutePublishMessage();
-                        this.Close();
-                        return;
-                    }
-                    _timeoutCount++;
-                    viewModel.RecordInfo($"{viewModel.Account.AccountId}视频播放错误或者超时: {data.error}");
+                    viewModel.RecordInfo($"{viewModel.Account.AccountId}视频播放错误或者超时: {data.error};视频地址：{data.videoUrl}");
                     await SendNextVideo();
                 }
             }

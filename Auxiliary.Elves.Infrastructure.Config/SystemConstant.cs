@@ -195,7 +195,8 @@ namespace Auxiliary.Elves.Infrastructure.Config
         /// </summary>
         public const string HostPort = "HostPort";
 
-        public const string ServerUrl = "http://44.195.234.47:3000/";
+        public const string ServerUrl = "http://autojl110.cc/";
+        public const string ServerVideoUrl = "http://autojl110.cc/v2/";
 
         public const string Unauthorized = "权限认证失败";
         /// <summary>
