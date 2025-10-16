@@ -57,7 +57,7 @@ namespace Auxiliary.Elves.Client.Views
 
                 webView.NavigateToString(HtmlContent);
                 _isWebViewReady = true;
-                viewModel.RecordInfo("WebView2初始化完成，等待页面就绪");
+                viewModel.RecordInfo($"{viewModel.Account.AccountId}初始化完成，等待页面就绪");
 
             }
             catch (Exception ex)
@@ -81,7 +81,7 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-
+        private int _timeoutCount = 0;
 
         private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
@@ -95,11 +95,12 @@ namespace Auxiliary.Elves.Client.Views
                 string action = data.action.ToString();
                 if (action == "pageReady")
                 {
+                    _timeoutCount = 0;
                     await SendNextVideo(); // 发送第一个视频
                 }
                 else if (action == "settlementComplete")
                 {
-
+                    _timeoutCount = 0;
                     // 执行结算任务
                     var success = await viewModel.UpdatePoints();
                     var nextSec = _random.Next(10, 20);
@@ -113,7 +114,14 @@ namespace Auxiliary.Elves.Client.Views
                 }
                 else if (action == "videoTimeout")
                 {
-                    viewModel.RecordInfo($"视频播放错误或者超时: {data.error}");
+                    if (_timeoutCount >= 5)
+                    {
+                        viewModel.ExecutePublishMessage();
+                        this.Close();
+                        return;
+                    }
+                    _timeoutCount++;
+                    viewModel.RecordInfo($"{viewModel.Account.AccountId}视频播放错误或者超时: {data.error}");
                     await SendNextVideo();
                 }
             }
@@ -135,7 +143,7 @@ namespace Auxiliary.Elves.Client.Views
             catch (Exception ex)
             {
                 SendLoadVideoCommand(null);
-                viewModel.RecordError(ex, "获取视频地址失败");
+                viewModel.RecordError(ex, $"{viewModel.Account.AccountId}获取视频地址失败");
             }
         }
 
@@ -167,7 +175,7 @@ namespace Auxiliary.Elves.Client.Views
             catch (Exception ex)
             {
                 var viewModel = this.DataContext as SessionViewModel;
-                viewModel?.RecordError(ex, "发送结算结果失败");
+                viewModel?.RecordError(ex, $"{viewModel?.Account?.AccountId}发送结算结果失败");
             }
         }
 
@@ -736,6 +744,21 @@ namespace Auxiliary.Elves.Client.Views
                 notifyWPF('pageReady', {});
             }, 100);
         });
+        document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+        document.addEventListener('keydown', function(e) {
+                // 禁用F12、Ctrl+Shift+I等开发者工具快捷键
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                    (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
 
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {

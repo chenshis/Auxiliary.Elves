@@ -56,6 +56,20 @@ namespace Auxiliary.Elves.Client.ViewModels
             if (parameter is AccountModel account)
             {
                 Account = account;
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        var apiResponse = await _httpClient.PostAsync<bool>(
+            string.Concat(SystemConstant.UpdateUserKeyRunRoute, $"?userkeyidserId={Account.AccountId}&isRun=true"));
+                        _logger.LogInformation($"{Account.AccountId}上线：{apiResponse.Data}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"是否上线接口请求失败");
+                    }
+
+                });
             }
         }
 
