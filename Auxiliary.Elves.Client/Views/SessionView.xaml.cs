@@ -557,38 +557,72 @@ namespace Auxiliary.Elves.Client.Views
             });
         }
 
-     function preloadVideoWithBlob(videoUrl) {
+function preloadVideoWithBlob(videoUrl) {
     return new Promise((resolve, reject) => {
         // 先清理之前的请求
         if (currentXHR) {
+            console.log('🔄 清理之前的XHR请求');
             currentXHR.abort();
             currentXHR = null;
         }
+
+        // 添加随机参数避免缓存污染
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2);
+        const uniqueUrl = `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}_t=${timestamp}&_r=${random}`;
+        
+        console.log('🚀 开始下载视频:', uniqueUrl);
         
         currentXHR = new XMLHttpRequest();
-        currentXHR.open('GET', videoUrl, true);
+        currentXHR.open('GET', uniqueUrl, true);
         currentXHR.responseType = 'blob';
         
+        let isCompleted = false;
+        
+        const complete = (result) => {
+            if (isCompleted) return;
+            isCompleted = true;
+            
+            if (currentXHR) {
+                currentXHR.onload = null;
+                currentXHR.onerror = null;
+                currentXHR.ontimeout = null;
+                currentXHR = null;
+            }
+            
+            result();
+        };
+
         currentXHR.onload = function() {
-            if (currentXHR && currentXHR.status === 200) {
+            console.log('📊 XHR响应状态:', currentXHR.status, currentXHR.readyState);
+            if (currentXHR.status === 200) {
                 const blob = currentXHR.response;
-                const blobUrl = URL.createObjectURL(blob);
-                currentXHR = null; // 成功完成，立即清理
-                resolve(blobUrl);
+                console.log('✅ 下载成功，Blob大小:', blob.size);
+                if (blob.size > 0) {
+                    const blobUrl = URL.createObjectURL(blob);
+                    complete(() => resolve(blobUrl));
+                } else {
+                    complete(() => reject(new Error('下载的文件为空')));
+                }
             } else {
-                currentXHR = null; // 失败也要清理
-                reject(new Error('下载失败'));
+                complete(() => reject(new Error(`HTTP ${currentXHR.status}`)));
             }
         };
         
         currentXHR.onerror = function() {
-            currentXHR = null; // 确保清理
-            reject(new Error('网络错误'));
+            console.error('❌ XHR网络错误');
+
+            complete(() => reject(new Error('网络错误')));
         };
         
         currentXHR.ontimeout = function() {
-            currentXHR = null; // 确保清理
-            reject(new Error('下载超时'));
+            console.warn('⏰ XHR请求超时');
+            complete(() => reject(new Error('下载超时')));
+        };
+        
+        // 监听请求状态变化
+        currentXHR.onreadystatechange = function() {
+            console.log('📈 XHR状态变化:', currentXHR.readyState);
         };
         
         currentXHR.timeout = 80000;
