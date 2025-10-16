@@ -370,7 +370,6 @@ namespace Auxiliary.Elves.Client.Views
         let matrixAnimationId = null;
         let countdownInterval = null;
         let countdownSeconds = 0;
-        let isLoadingVideo = false;
         let currentXHR = null;
 
         class MatrixRain {
@@ -543,7 +542,7 @@ namespace Auxiliary.Elves.Client.Views
                     const data = JSON.parse(event.data);
                     if (data.action === 'loadVideo') {
                         console.log('收到加载视频命令:', data.videoUrl);
-                        if (data.videoUrl && !isLoadingVideo) {
+                        if (data.videoUrl) {
                             loadAndPlayVideo(data.videoUrl);
                         }else{
                             showCountdown(10);
@@ -591,11 +590,10 @@ namespace Auxiliary.Elves.Client.Views
         }
     
         async function loadAndPlayVideo(videoUrl) {
-            if (!videoUrl || isLoadingVideo) {
+            if (!videoUrl) {
                 return;
             }
         
-            isLoadingVideo = true;
             currentVideoUrl = videoUrl;
             isVideoLoaded = false;
 
@@ -674,7 +672,7 @@ namespace Auxiliary.Elves.Client.Views
             } catch (error) {
                 handleLoadError(error.message);
             } finally {
-                isLoadingVideo = false;
+               
             }
         }
 
