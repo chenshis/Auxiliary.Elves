@@ -26,7 +26,7 @@ namespace Auxiliary.Elves.Infrastructure.Config
             this.Code = code;
             this.Msg = msg;
             this.Data = data;
-            this.ServerTime = DateTime.Now.Ticks;
+            this.ServerTime = DateTimeHelper.Now.Ticks;
         }
 
         public ApiResponse(int code, string msg, object data, long serverTimeTicks)

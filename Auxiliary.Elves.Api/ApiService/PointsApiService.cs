@@ -36,7 +36,7 @@ namespace Auxiliary.Elves.Api.ApiService
             if (userPoints != null)
             {
                 userPoints.Userpoints += SystemConstant.MaxPoints;
-                userPoints.UpdateTime = DateTime.Now;
+                userPoints.UpdateTime = DateTimeHelper.Now;
                 _dbContext.UserPointsEntities.Update(userPoints);
             }
             else
@@ -50,7 +50,7 @@ namespace Auxiliary.Elves.Api.ApiService
             }
 
 
-            var now = DateTime.Now;
+            var now = DateTimeHelper.Now;
             var start = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
             var end = start.AddHours(1);
 
@@ -63,7 +63,7 @@ namespace Auxiliary.Elves.Api.ApiService
             if (userPointsRecord != null)
             {
                 userPointsRecord.Userpoints += SystemConstant.MaxPoints; 
-                userPointsRecord.UpdateTime = DateTime.Now;
+                userPointsRecord.UpdateTime = DateTimeHelper.Now;
                 //记录积分记录
                 _dbContext.UserPointsRecordEntities.Update(userPointsRecord);
             }
@@ -73,8 +73,8 @@ namespace Auxiliary.Elves.Api.ApiService
                 _dbContext.UserPointsRecordEntities.Add(new Domain.Entities.UserPointsRecordEntity
                 {
                     Userid = userName,
-                    UpdateTime = DateTime.Now,
-                    Userdata = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")),
+                    UpdateTime = DateTimeHelper.Now,
+                    Userdata = Convert.ToDateTime(DateTimeHelper.Now.ToString("yyyy-MM-dd HH:00:00")),
                     Userpoints = SystemConstant.MaxPoints,
                     IsExtract = false
                 });
@@ -109,13 +109,13 @@ namespace Auxiliary.Elves.Api.ApiService
                 return false;
 
             userPoints.Userpoints -= points;
-            userPoints.UpdateTime = DateTime.Now;
+            userPoints.UpdateTime = DateTimeHelper.Now;
             _dbContext.UserPointsEntities.Update(userPoints);
             _dbContext.UserPointsRecordEntities.Add(new Domain.Entities.UserPointsRecordEntity
             {
                 Userid = userName,
                 Userpoints = points,
-                Userdata = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:00:00")),
+                Userdata = Convert.ToDateTime(DateTimeHelper.Now.ToString("yyyy-MM-dd HH:00:00")),
                 IsExtract = true
             });
             return _dbContext.SaveChanges() > SystemConstant.Zero;
