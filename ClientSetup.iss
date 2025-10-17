@@ -7,6 +7,7 @@
 #define IconPath "Auxiliary.Elves.Client\Assets\logo.ico"
 #define DotNetRuntimeInstaller "windowsdesktop-runtime-6.0.36-win-x64.exe"
 #define DotNetAspNetCoreRuntime "aspnetcore-runtime-6.0.36-win-x64.exe"
+#define WebView2Installer "MicrosoftEdgeWebview2Setup.exe"
 
 [Setup]
 AppId={{3F13D2A1-8C4F-4A3B-9E6D-7B8C9A2B1C3D}
@@ -39,6 +40,8 @@ Source: "{#SourcePath}*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 ; .NET 6 运行时安装程序
 Source: "{#DotNetRuntimeInstaller}"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall solidbreak
 Source: "{#DotNetAspNetCoreRuntime}"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall solidbreak
+; WebView2 运行时安装程序 - 确保这个文件存在
+Source: "{#WebView2Installer}"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall; Check: IsWebView2RuntimeNeeded
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -46,6 +49,12 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
+; 安装 WebView2 Runtime（优先安装）
+Filename: "{tmp}\{#WebView2Installer}"; \
+    Parameters: "/silent /install"; \
+    StatusMsg: "正在安装 Microsoft WebView2 Runtime..."; \
+    Check: IsWebView2RuntimeNeeded; \
+    Flags: waituntilterminated
 ; 安装 .NET 6 桌面运行时（如果需要）
 Filename: "{tmp}\{#DotNetRuntimeInstaller}"; \
     Parameters: "/install /quiet /norestart"; \
@@ -69,6 +78,47 @@ Filename: "{app}\{#MyAppExeName}"; \
 Filename: "{sys}\taskkill.exe"; Parameters: "/f /im {#MyAppExeName}"; Flags: runhidden waituntilterminated
 
 [Code]
+// 检查 WebView2 Runtime 是否已安装
+function IsWebView2RuntimeNeeded: Boolean;
+var
+  Version: string;
+  Install: Boolean;
+begin
+  Install := True;
+  
+  // 方法1: 检查注册表 - WebView2 运行时版本
+  if RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) then
+  begin
+    if Version >= '120.0.0.0' then  // 检查版本是否足够新
+      Install := False;
+  end;
+  
+  // 方法2: 检查其他注册表路径
+  if Install and RegKeyExists(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}') then
+  begin
+    if RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) then
+    begin
+      if Version >= '120.0.0.0' then
+        Install := False;
+    end;
+  end;
+  
+  // 方法3: 检查 WebView2 Loader DLL 是否存在
+  if Install and FileExists(ExpandConstant('{sys}\Microsoft.WebView2.FixedVersionRuntime.120.0.2210.91\x64\WebView2Loader.dll')) then
+    Install := False;
+  
+  // 方法4: 检查用户数据文件夹中的运行时
+  if Install and FileExists(ExpandConstant('{localappdata}\Microsoft\EdgeWebView\Application\*\msedgewebview2.exe')) then
+    Install := False;
+  
+  Result := Install;
+  
+  if Result then
+    Log('WebView2 Runtime 需要安装')
+  else
+    Log('WebView2 Runtime 已安装，跳过安装');
+end;
+
 function IsDotNetDesktopRuntimeNeeded: Boolean;
 var
   Version: string;
