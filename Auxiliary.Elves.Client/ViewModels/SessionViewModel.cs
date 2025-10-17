@@ -39,7 +39,15 @@ namespace Auxiliary.Elves.Client.ViewModels
 
         public void RecordInfo(string message)
         {
-            _logger.LogInformation(message);
+            try
+            {
+                _logger.LogInformation(message);
+            }
+            catch (Exception)
+            {
+
+            }
+            
         }
 
         public void RecordError(Exception ex, string message)
@@ -101,7 +109,7 @@ namespace Auxiliary.Elves.Client.ViewModels
                         originalString.Substring(originalString.Length - 10) : originalString;
                     _logger.LogInformation($"{Account.AccountId}:拉取视频({result})");
                 }
-                return string.Concat(SystemConstant.ServerUrl, apiResponse.Data.VideoUrl);
+                return string.Concat(SystemConstant.ServerVideoUrl, apiResponse.Data.VideoUrl);
             }
         }
 

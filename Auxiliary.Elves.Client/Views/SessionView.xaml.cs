@@ -81,8 +81,6 @@ namespace Auxiliary.Elves.Client.Views
             }
         }
 
-        private int _timeoutCount = 0;
-
         private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var webView = sender as WebView2;
@@ -95,12 +93,10 @@ namespace Auxiliary.Elves.Client.Views
                 string action = data.action.ToString();
                 if (action == "pageReady")
                 {
-                    _timeoutCount = 0;
                     await SendNextVideo(); // 发送第一个视频
                 }
                 else if (action == "settlementComplete")
                 {
-                    _timeoutCount = 0;
                     // 执行结算任务
                     var success = await viewModel.UpdatePoints();
                     var nextSec = _random.Next(10, 20);
@@ -114,14 +110,7 @@ namespace Auxiliary.Elves.Client.Views
                 }
                 else if (action == "videoTimeout")
                 {
-                    if (_timeoutCount >= 5)
-                    {
-                        viewModel.ExecutePublishMessage();
-                        this.Close();
-                        return;
-                    }
-                    _timeoutCount++;
-                    viewModel.RecordInfo($"{viewModel.Account.AccountId}视频播放错误或者超时: {data.error}");
+                    viewModel.RecordInfo($"{viewModel.Account.AccountId}视频播放错误或者超时: {data.error};视频地址：{data.videoUrl}");
                     await SendNextVideo();
                 }
             }
@@ -381,7 +370,6 @@ namespace Auxiliary.Elves.Client.Views
         let matrixAnimationId = null;
         let countdownInterval = null;
         let countdownSeconds = 0;
-        let isLoadingVideo = false;
         let currentXHR = null;
 
         class MatrixRain {
@@ -498,7 +486,7 @@ namespace Auxiliary.Elves.Client.Views
             hideCountdown();
         }
 
-        function showCountdown(seconds) {
+        function showCountdown(seconds,errorMessage) {
             countdownSeconds = seconds;
             countdownText.style.display = 'block';
             updateCountdownText();
@@ -523,7 +511,7 @@ namespace Auxiliary.Elves.Client.Views
                     showLoadingScreen();
                     notifyWPF('videoTimeout', {
                         videoUrl: currentVideoUrl,
-                        error: '视频加载失败，自动切换到下一个视频'
+                        error: errorMessage
                     });
                 }
             }, 1000);
@@ -554,10 +542,10 @@ namespace Auxiliary.Elves.Client.Views
                     const data = JSON.parse(event.data);
                     if (data.action === 'loadVideo') {
                         console.log('收到加载视频命令:', data.videoUrl);
-                        if (data.videoUrl && !isLoadingVideo) {
+                        if (data.videoUrl) {
                             loadAndPlayVideo(data.videoUrl);
                         }else{
-                            showCountdown(10);
+                            showCountdown(10,'地址不正确');
                         }
                     } else if (data.action === 'settlementResult') {
                         console.log('收到结算结果:', data.success);
@@ -569,44 +557,84 @@ namespace Auxiliary.Elves.Client.Views
             });
         }
 
-        function preloadVideoWithBlob(videoUrl) {
-            return new Promise((resolve, reject) => {
-                currentXHR = new XMLHttpRequest();
-                currentXHR.open('GET', videoUrl, true);
-                currentXHR.responseType = 'blob';
-                
-                currentXHR.onload = function() {
-                    if (currentXHR.status === 200) {
-                        const blob = currentXHR.response;
-                        const blobUrl = URL.createObjectURL(blob);
-                        resolve(blobUrl);
-                    } else {
-                        reject(new Error('下载失败'));
-                    }
-                    currentXHR = null;
-                };
-                
-                currentXHR.onerror = function() {
-                    reject(new Error('网络错误'));
-                    currentXHR = null;
-                };
-                
-                currentXHR.ontimeout = function() {
-                    reject(new Error('下载超时'));
-                    currentXHR = null;
-                };
-                
-                currentXHR.timeout = 60000;
-                currentXHR.send();
-            });
+function preloadVideoWithBlob(videoUrl) {
+    return new Promise((resolve, reject) => {
+        // 先清理之前的请求
+        if (currentXHR) {
+            console.log('🔄 清理之前的XHR请求');
+            currentXHR.abort();
+            currentXHR = null;
         }
+
+        // 添加随机参数避免缓存污染
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2);
+        const uniqueUrl = `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}_t=${timestamp}&_r=${random}`;
+        
+        console.log('🚀 开始下载视频:', uniqueUrl);
+        
+        currentXHR = new XMLHttpRequest();
+        currentXHR.open('GET', uniqueUrl, true);
+        currentXHR.responseType = 'blob';
+        
+        let isCompleted = false;
+        
+        const complete = (result) => {
+            if (isCompleted) return;
+            isCompleted = true;
+            
+            if (currentXHR) {
+                currentXHR.onload = null;
+                currentXHR.onerror = null;
+                currentXHR.ontimeout = null;
+                currentXHR = null;
+            }
+            
+            result();
+        };
+
+        currentXHR.onload = function() {
+            console.log('📊 XHR响应状态:', currentXHR.status, currentXHR.readyState);
+            if (currentXHR.status === 200) {
+                const blob = currentXHR.response;
+                console.log('✅ 下载成功，Blob大小:', blob.size);
+                if (blob.size > 0) {
+                    const blobUrl = URL.createObjectURL(blob);
+                    complete(() => resolve(blobUrl));
+                } else {
+                    complete(() => reject(new Error('下载的文件为空')));
+                }
+            } else {
+                complete(() => reject(new Error(`HTTP ${currentXHR.status}`)));
+            }
+        };
+        
+        currentXHR.onerror = function() {
+            console.error('❌ XHR网络错误');
+
+            complete(() => reject(new Error('网络错误')));
+        };
+        
+        currentXHR.ontimeout = function() {
+            console.warn('⏰ XHR请求超时');
+            complete(() => reject(new Error('下载超时')));
+        };
+        
+        // 监听请求状态变化
+        currentXHR.onreadystatechange = function() {
+            console.log('📈 XHR状态变化:', currentXHR.readyState);
+        };
+        
+        currentXHR.timeout = 80000;
+        currentXHR.send();
+    });
+}
     
         async function loadAndPlayVideo(videoUrl) {
-            if (!videoUrl || isLoadingVideo) {
+            if (!videoUrl) {
                 return;
             }
         
-            isLoadingVideo = true;
             currentVideoUrl = videoUrl;
             isVideoLoaded = false;
 
@@ -685,14 +713,14 @@ namespace Auxiliary.Elves.Client.Views
             } catch (error) {
                 handleLoadError(error.message);
             } finally {
-                isLoadingVideo = false;
+               
             }
         }
 
         function handleLoadError(errorMessage) {
             showLoadingScreen();
             isVideoLoaded = false;
-            showCountdown(10);
+            showCountdown(10,errorMessage);
         }
     
         function showSettlementScreen() {
