@@ -11,8 +11,11 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NLog.Web;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SystemConstant.JwtSecurityKey)),
         LifetimeValidator = (notBefore, expires, securityToken, validationParameters) =>
         {
-            return expires >= DateTime.Now;
+            return expires >= DateTimeHelper.Now;
         }
     };
 });
@@ -78,6 +81,7 @@ builder.Services.AddDbContext<AuxiliaryDbContext>((options) =>
 });
 
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -168,9 +172,7 @@ string GetPort()
    
     return port;
 }
-
-
- string GetMimeType(string fileExtension)
+string GetMimeType(string fileExtension)
 {
     return fileExtension.ToLower() switch
     {
@@ -184,3 +186,4 @@ string GetPort()
         _ => "application/octet-stream"
     };
 }
+

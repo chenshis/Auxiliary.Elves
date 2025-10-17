@@ -18,6 +18,12 @@ namespace Auxiliary.Elves.Server.Controllers
             JWTApiService= jWTApiService;
         }
 
+        [HttpPost]
+        [Route("TestDateTimeNow")]
+        public DateTime TestDateTimeNow() 
+        {
+          return DateTimeHelper.Now;
+        }
 
         /// <summary>
         /// 登录(别用，与客户端交互用)

@@ -72,7 +72,7 @@ namespace Auxiliary.Elves.Api.ApiService
             addUserEntity.UserName = request.UserName;
             addUserEntity.Password = request.Password.GetMd5();
             addUserEntity.Role = RoleEnum.Admin;
-            addUserEntity.Expires =DateTime.Now;
+            addUserEntity.Expires = DateTimeHelper.Now;
             addUserEntity.Status = true;
             _dbContext.UserServerEntities.Add(addUserEntity);
             var result = _dbContext.SaveChanges();
@@ -227,7 +227,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                    if (expireDate > DateTime.Now)
+                    if (expireDate > DateTimeHelper.Now)
                     {
                         userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
                     }
@@ -274,7 +274,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                    if (expireDate > DateTime.Now)
+                    if (expireDate > DateTimeHelper.Now)
                     {
                         userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
                     }
@@ -323,7 +323,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 {
                     DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                    if (expireDate > DateTime.Now)
+                    if (expireDate > DateTimeHelper.Now)
                     {
                         userInfo.ExpireDate = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
                     }
@@ -393,10 +393,10 @@ namespace Auxiliary.Elves.Api.ApiService
 
             if (!string.IsNullOrWhiteSpace(userEntity.Userkeyip))
             {
-                if ((DateTime.Now - userEntity.CreateTime).Days > SystemConstant.MaxDay)
+                if ((DateTimeHelper.Now - userEntity.CreateTime).Days > SystemConstant.MaxDay)
                     return false;
 
-                if (userEntity.IsLock && (DateTime.Now - userEntity.Userkeylastdate.Value).Hours < SystemConstant.MaxHour)
+                if (userEntity.IsLock && (DateTimeHelper.Now - userEntity.Userkeylastdate.Value).Hours < SystemConstant.MaxHour)
                     return false;
 
                 if (userEntity.Userkeyip != accountRequest.Mac)
@@ -406,13 +406,13 @@ namespace Auxiliary.Elves.Api.ApiService
                 }
                 else
                 {
-                    userEntity.Userkeylastdate = DateTime.Now;
+                    userEntity.Userkeylastdate = DateTimeHelper.Now;
                     userEntity.Isonline = true;
                 }
             }
             else
             {
-                userEntity.Userkeylastdate = DateTime.Now;
+                userEntity.Userkeylastdate = DateTimeHelper.Now;
                 userEntity.Isonline = true;
             }
 
@@ -490,7 +490,7 @@ namespace Auxiliary.Elves.Api.ApiService
             user.IsEnable = true;
             user.UserBindAccount = GoogleAuthenticatorHelper.GenerateSecretKey(userName);
             user.UserInviteUserName = userInviteUserName;
-            user.CreateTime = DateTime.Now;
+            user.CreateTime = DateTimeHelper.Now;
             _dbContext.UserEntities.Add(user);
 
             var result = _dbContext.SaveChanges();
@@ -623,7 +623,7 @@ namespace Auxiliary.Elves.Api.ApiService
                 keyEntity.Isonline = false;
                 keyEntity.IsRun = false;
                 keyEntity.IsLock = false;
-                keyEntity.CreateTime = DateTime.Now;
+                keyEntity.CreateTime = DateTimeHelper.Now;
                 _dbContext.UserKeyEntities.Add(keyEntity);
                 result = _dbContext.SaveChanges();
 

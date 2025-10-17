@@ -35,7 +35,7 @@ namespace Auxiliary.Elves.Api.ApiService
             claims[1] = new Claim(ClaimTypes.Actor, "");
             claims[2] = new Claim(ClaimTypes.Name, userEntity.UserName);
             claims[3] = new Claim(ClaimTypes.PrimarySid, userEntity.Id.ToString());
-            //if (userEntity.Expires != null && userEntity.Expires < DateTime.Now)
+            //if (userEntity.Expires != null && userEntity.Expires < DateTimeHelper.Now)
             //{
             //    claims[4] = new Claim(ClaimTypes.Role, RoleEnum.Free.ToString());
             //}
@@ -46,7 +46,7 @@ namespace Auxiliary.Elves.Api.ApiService
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SystemConstant.JwtSecurityKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(SystemConstant.JwtIssuer, SystemConstant.JwtAudience, claims, null, DateTime.Now.AddHours(10).AddMinutes(1), credentials);
+            var token = new JwtSecurityToken(SystemConstant.JwtIssuer, SystemConstant.JwtAudience, claims, null, DateTimeHelper.Now.AddHours(10).AddMinutes(1), credentials);
             var returnToken = _jwtHandler.WriteToken(token);
             return returnToken;
         }

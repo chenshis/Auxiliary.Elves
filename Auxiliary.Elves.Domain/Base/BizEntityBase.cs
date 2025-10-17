@@ -1,4 +1,5 @@
-﻿using Auxiliary.Elves.Infrastructure.Config.Domain;
+﻿using Auxiliary.Elves.Infrastructure.Config;
+using Auxiliary.Elves.Infrastructure.Config.Domain;
 using Auxiliary.Elves.Infrastructure.Config.Snowflake;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Auxiliary.Elves.Domain.Base
         public virtual string UpdateUser { get; set; } = "admin";
 
         [Column(TypeName = "datetime")]
-        public virtual DateTime UpdateTime { get; set; } = DateTime.Now;
+        public virtual DateTime UpdateTime { get; set; } = DateTimeHelper.Now;
 
         [Column(TypeName = "datetime")]
         public virtual DateTime CreateTime { get; set; }

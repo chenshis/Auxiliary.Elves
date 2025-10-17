@@ -105,7 +105,7 @@ namespace Auxiliary.Elves.Server.Controllers
         public async Task<VideoDto> GetVideoUrl(string UserName)
         {
             VideoDto video = new VideoDto();
-
+            
             if (string.IsNullOrWhiteSpace(UserName))
                 return video;
 
@@ -121,7 +121,7 @@ namespace Auxiliary.Elves.Server.Controllers
             {
                 DateTime expireDate = user.Userkeylastdate.Value.AddDays(SystemConstant.MaxDay);
 
-                if (expireDate > DateTime.Now)
+                if (expireDate > DateTimeHelper.Now)
                 {
                     expireDateStr = expireDate.ToString("yyyy-MM-dd HH:mm:ss");
                 }
